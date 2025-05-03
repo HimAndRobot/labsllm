@@ -16,16 +16,16 @@ class ChatFactory
     /**
      * Creates a chat instance based on the provider
      *
-     * @param string $provider
+     * @param array $args
      * @param ConfigInterface $config
      * @return ChatInterface
      * @throws ProviderNotFoundException
      */
-    public static function create(string $provider, ConfigInterface $config): ChatInterface
+    public static function create(array $args, ConfigInterface $config): ChatInterface
     {
-        return match ($provider) {
-            'openai' => new OpenAIChat($config),
-            default => throw new ProviderNotFoundException("Provider '{$provider}' not found or not implemented."),
+        return match ($args['provider']) {
+            'openai' => new OpenAIChat($config, $args),
+            default => throw new ProviderNotFoundException("Provider '{$args['provider']}' not found or not implemented."),
         };
     }
 } 

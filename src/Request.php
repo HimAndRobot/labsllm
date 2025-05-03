@@ -37,6 +37,11 @@ class Request
      * Config
      */
     private ?ConfigInterface $config = null;
+
+    /**
+     * System message
+     */
+    private ?string $systemMessage = null;
     
     /**
      * Sets the provider to be used
@@ -68,6 +73,18 @@ class Request
     {
         $this->prompt = $prompt;
         
+        return $this;
+    }
+
+    /**
+     * Sets the system message
+     *
+     * @param string $message
+     * @return self
+     */
+    public function withSystemMessage(string $message): self
+    {
+        $this->systemMessage = $message;
         return $this;
     }
 
@@ -106,8 +123,12 @@ class Request
         if ($this->config->getApiKey() === null) {
             throw new \InvalidArgumentException('API key not defined');
         }
-        
-        return ChatFactory::create($this->provider, $this->config);
+        $args = [
+            'provider' => $this->provider,
+            'model' => $this->model,
+            'systemMessage' => $this->systemMessage,
+        ];
+        return ChatFactory::create($args, $this->config);
     }
     
     /**

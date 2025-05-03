@@ -6,45 +6,34 @@ namespace LabsLLM\Messages;
  * Base class for all messages
  */
 class Message
-{
-    /**
-     * Message role
-     */
-    protected string $role;
-    
-    /**
-     * Message content
-     */
-    protected string $content;
-    
+{ 
     /**
      * Constructor
      *
      * @param string $role
      * @param string $content
      */
-    public function __construct(string $role, string $content)
-    {
-        $this->role = $role;
-        $this->content = $content;
-    }
+    function __construct(
+        protected string $role,
+        protected string $content
+    ) {}
     
     /**
      * Returns the message role
      *
      * @return string
      */
-    public function getRole(): string
+    function getRole(): string
     {
         return $this->role;
     }
-    
+
     /**
      * Returns the message content
      *
      * @return string
      */
-    public function getContent(): string
+    function getContent(): string
     {
         return $this->content;
     }
@@ -54,7 +43,7 @@ class Message
      *
      * @return array
      */
-    public function toArray(): array
+    private function toArray(): array
     {
         return [
             'role' => $this->role,
@@ -68,9 +57,9 @@ class Message
      * @param string $content
      * @return \LabsLLM\Messages\Message
      */
-    public static function user(string $content): self
+    public static function user(string $content): array
     {
-        return new self('user', $content);
+        return (new self('user', $content))->toArray();
     }
     
     /**
@@ -79,9 +68,9 @@ class Message
      * @param string $content
      * @return \LabsLLM\Messages\Message
      */
-    public static function assistant(string $content): self
+    public static function assistant(string $content): array
     {
-        return new self('assistant', $content);
+        return (new self('assistant', $content))->toArray();
     }
     
     /**
@@ -90,9 +79,9 @@ class Message
      * @param string $content
      * @return \LabsLLM\Messages\Message
      */
-    public static function system(string $content): self
+    public static function system(string $content): array
     {
-        return new self('system', $content);
+        return (new self('system', $content))->toArray();
     }
     
     /**
@@ -102,8 +91,8 @@ class Message
      * @param string $name
      * @return \LabsLLM\Messages\FunctionMessage
      */
-    public static function function(string $content, string $name): FunctionMessage
+    public static function function(string $content, string $name): array
     {
-        return new FunctionMessage($content, $name);
+        return (new self('function', $content))->toArray();
     }
 } 

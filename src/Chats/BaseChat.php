@@ -44,9 +44,9 @@ abstract class BaseChat implements ChatInterface
      * @param Message|string $message
      * @return self
      */
-    public function send(Message|string $message): self
-    {
-        $this->execute();   
+    public function send(Message|string $prompt): self
+    {   
+        $this->execute($prompt);
         return $this;
     }
     
@@ -72,12 +72,11 @@ abstract class BaseChat implements ChatInterface
     {
         return $this->lastResponse ? $this->lastResponse->getContent() : '';
     }
-
     
     /**
      * Executes the request to the provider
      *
      * @return void
      */
-    abstract protected function execute(): void;
+    abstract protected function execute(string $prompt): void;
 } 
