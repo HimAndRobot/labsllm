@@ -21,8 +21,9 @@ class OpenAIChat extends BaseChat
         $result = $client->chat()->create([
             'model' => $this->model,
             'messages' => $options['messages'] ?? [],
-            'tools' => $options['tools'] ?? []
+            ...($options['tools'] ? ['tools' => $options['tools']] : [])
         ]);
+        
         
         return $this->processResponse($result);
     }

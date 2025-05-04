@@ -75,7 +75,7 @@ class FunctionHelper
 
     public function execute(array $arguments): array
     {
-        $response = ($this->function)($arguments);
+        $response = ($this->function)(...$arguments);
         return [
             'success' => true,
             'response' => is_string($response) ? $response : json_encode($response)
