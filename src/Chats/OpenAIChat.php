@@ -14,7 +14,7 @@ class OpenAIChat extends BaseChat
      *
      * @return void
      */
-    public function executePrompt(string $prompt, array $options = []): array
+    public function executePrompt(array $options = []): array
     {
         $client = OpenAI::client($this->apiKey);
 
@@ -39,6 +39,18 @@ class OpenAIChat extends BaseChat
             return [
                 'type' => 'text',
                 'response' => $response->choices[0]->message->content
+            ];
+        } else if ($response->choices[0]->message->toolCalls) {
+            return [
+                'type' => 'tool',
+                'rawResponse' => $response->choices[0]->message->toolCalls,
+                'tools' => array_map(function ($tool) {
+                    return [
+                        'id' => $tool->id,
+                        'name' => $tool->function->name,
+                        'arguments' => json_decode($tool->function->arguments, true)
+                    ];
+                }, $response->choices[0]->message->toolCalls)
             ];
         }
 
