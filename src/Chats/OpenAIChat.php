@@ -13,10 +13,6 @@ use LabsLLM\Config\ConfigInterface;
  */
 class OpenAIChat extends BaseChat
 {
-    /**
-     * OpenAI specific configuration
-     */
-    protected OpenAIConfig $openaiConfig;
 
     /**
      * OpenAI model
@@ -24,26 +20,20 @@ class OpenAIChat extends BaseChat
     protected string $model;
 
     /**
+     * OpenAI API key
+     */
+    protected string $apiKey;
+
+    /**
      * System message
      */
     protected string $systemMessage;
-    
-    /**
-     * Constructor
-     *
-     * @param ConfigInterface $config
-     */
-    public function __construct(ConfigInterface $config, array $args)
-    {
-        parent::__construct($config);
-        
-        if (!$config instanceof OpenAIConfig) {
-            throw new \InvalidArgumentException('Configuration must be an instance of OpenAIConfig');
-        }
-        
-        $this->openaiConfig = $config;
-        $this->model = $args['model'] ?? 'gpt-4o';
+
+    public function __construct(array $args)
+    {   
+        $this->model = $args['provider']->getModel();
         $this->systemMessage = $args['systemMessage'] ?? '';
+        $this->apiKey = $args['provider']->getApiKey();
     }
     
     /**
@@ -53,7 +43,7 @@ class OpenAIChat extends BaseChat
      */
     protected function execute(string $prompt): void
     {
-        $client = OpenAI::client($this->openaiConfig->getApiKey());
+        $client = OpenAI::client($this->apiKey);
 
         $result = $client->chat()->create([
             'model' => $this->model,

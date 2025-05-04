@@ -1,11 +1,11 @@
 <?php
 
-namespace LabsLLM\Config;
+namespace LabsLLM\Providers;
 
 /**
  * Interface for provider configurations
  */
-interface ConfigInterface
+interface ProviderInterface
 {
     /**
      * Returns the API key
@@ -20,11 +20,4 @@ interface ConfigInterface
      * @return string
      */
     public function getModel(): string;
-    
-    /**
-     * Returns the configuration as an array
-     *
-     * @return array
-     */
-    public function toArray(): array;
 } 

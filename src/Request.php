@@ -2,10 +2,11 @@
 
 namespace LabsLLM;
 
-use LabsLLM\Config\ConfigInterface;
-use LabsLLM\Config\OpenAIConfig;
-use LabsLLM\Contracts\ChatInterface;
 use LabsLLM\Enums\Provider;
+use LabsLLM\Config\OpenAIConfig;
+use LabsLLM\Config\ConfigInterface;
+use LabsLLM\Contracts\ChatInterface;
+use LabsLLM\Providers\ProviderInterface;
 use LabsLLM\Exceptions\ProviderNotFoundException;
 
 /**
@@ -16,50 +17,19 @@ class Request
     /**
      * Provider to be used
      */
-    private ?string $provider = null;
-    
-    /**
-     * Model to be used
-     */
-    private ?string $model = null;
-    
-    /**
-     * Prompt to be sent
-     */
+    private ProviderInterface $provider;
     private ?string $prompt = null;
-    
-    /**
-     * API key
-     */
-    private ?string $apiKey = null;
-
-    /**
-     * Config
-     */
-    private ?ConfigInterface $config = null;
-
-    /**
-     * System message
-     */
     private ?string $systemMessage = null;
     
     /**
      * Sets the provider to be used
      *
-     * @param Provider|string $provider
-     * @param string|null $model
+     * @param ProviderInterface $provider
      * @return self
      */
-    public function using(Provider|string $provider, ?string $model = null): self
+    public function using(ProviderInterface $provider): self
     {
-        if ($provider instanceof Provider) {
-            $this->provider = $provider->value;
-        } else {
-            $this->provider = $provider;
-        }
-        
-        $this->model = $model;
-        
+        $this->provider = $provider;
         return $this;
     }
     
@@ -87,12 +57,6 @@ class Request
         $this->systemMessage = $message;
         return $this;
     }
-
-    public function setConfig(ConfigInterface $config): self
-    {
-        $this->config = $config;
-        return $this;
-    }
     
     /**
      * Gets the response as text
@@ -115,51 +79,11 @@ class Request
         if (!$this->provider) {
             throw new \InvalidArgumentException('Provider not defined');
         }
-        
-        if (!$this->config) {
-            throw new \InvalidArgumentException('Config not defined');
-        }
 
-        if ($this->config->getApiKey() === null) {
-            throw new \InvalidArgumentException('API key not defined');
-        }
         $args = [
             'provider' => $this->provider,
-            'model' => $this->model,
             'systemMessage' => $this->systemMessage,
         ];
-        return ChatFactory::create($args, $this->config);
-    }
-    
-    /**
-     * Creates the appropriate configuration based on the provider
-     *
-     * @return ConfigInterface
-     */
-    private function createConfig(): ConfigInterface
-    {
-        return match ($this->provider) {
-            'openai' => new OpenAIConfig(
-                $this->apiKey,
-                $this->model ?? 'gpt-4o'
-            ),
-            // Add other providers here when implemented
-            default => throw new ProviderNotFoundException("Provider '{$this->provider}' not found or not implemented."),
-        };
-    }
-    
-    /**
-     * Gets the API key from environment variables
-     *
-     * @return string|null
-     */
-    private function getApiKeyFromEnvironment(): ?string
-    {
-        return match ($this->provider) {
-            'openai' => getenv('OPENAI_API_KEY'),
-            'anthropic' => getenv('ANTHROPIC_API_KEY'),
-            'gemini' => getenv('GEMINI_API_KEY'),
-            default => null,
-        };
+        return ChatFactory::create($args);
     }
 } 

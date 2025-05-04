@@ -11,10 +11,6 @@ use LabsLLM\Messages\Message;
  */
 abstract class BaseChat implements ChatInterface
 {
-    /**
-     * Chat configuration
-     */
-    protected ConfigInterface $config;
     
     /**
      * Chat messages
@@ -27,16 +23,6 @@ abstract class BaseChat implements ChatInterface
      * Last response received
      */
     protected ?Message $lastResponse = null;
-    
-    /**
-     * Constructor
-     *
-     * @param ConfigInterface $config
-     */
-    public function __construct(ConfigInterface $config)
-    {
-        $this->config = $config;
-    }
     
     /**
      * Sends a message to the chat
