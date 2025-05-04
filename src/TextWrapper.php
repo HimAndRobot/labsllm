@@ -3,9 +3,10 @@
 namespace LabsLLM;
 
 use LabsLLM\Chats\OpenAIChat;
-use LabsLLM\Contracts\ChatInterface;
 use LabsLLM\Messages\Message;
 use LabsLLM\Messages\MessagesBag;
+use LabsLLM\Helpers\FunctionHelper;
+use LabsLLM\Contracts\ChatInterface;
 use LabsLLM\Contracts\ProviderInterface;
 
 /**
@@ -16,28 +17,39 @@ class TextWrapper
 
     /**
      * The provider
+     * @var ProviderInterface
      */
     protected ProviderInterface $provider;
 
     /**
      * The chat provider
+     * @var ChatInterface
      */
     protected ChatInterface $chatProvider;
 
     /**
      * The messages
+     * @var MessagesBag
      */
     protected MessagesBag $messagesBag;
 
     /**
      * The last response
+     * @var array
      */
     protected array $lastResponse;
 
     /**
      * The system message
+     * @var string
      */
     protected string $systemMessage;
+
+    /**
+     * The tools
+     * @var array<FunctionHelper>
+     */
+    protected array $tools;
     
 
     /**
@@ -57,14 +69,30 @@ class TextWrapper
             ...(isset($this->systemMessage) ? [Message::system($this->systemMessage)] : []),
             Message::user($prompt)
         ]);
+        
 
         $response = $this->chatProvider->executePrompt($prompt, [
-            'messages' => $this->messagesBag->toArray()
+            'messages' => $this->messagesBag->toArray(),
+            'tools' => array_map(function (FunctionHelper $tool) {
+                return $tool->toArray();
+            }, $this->tools)
         ]);
 
         $this->messagesBag->add(Message::assistant($response['response']));
         $this->lastResponse = $response;
 
+        return $this;
+    }
+
+    /**
+     * Add a tool
+     *
+     * @param FunctionHelper $tool
+     * @return self
+     */
+    public function addTool(FunctionHelper $tool): self
+    {
+        $this->tools[] = $tool;
         return $this;
     }
 
