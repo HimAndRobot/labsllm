@@ -54,7 +54,7 @@ class TextWrapper
         }
 
         $this->messagesBag = MessagesBag::create([
-            ...($this->systemMessage ? [Message::system($this->systemMessage)] : []),
+            ...(isset($this->systemMessage) ? [Message::system($this->systemMessage)] : []),
             Message::user($prompt)
         ]);
 

@@ -16,7 +16,7 @@ Sending a simple prompt to an LLM:
 // With prompt only
 $response = LabsLLM::text()
     ->using(new OpenAI('SK-***', 'gpt-4o-mini'))
-    ->withPrompt('Your question here')
+    ->executePrompt('Your question here')
     ->asText();
 ```
 
@@ -29,7 +29,7 @@ You can include system instructions in your prompt:
 $response = LabsLLM::text()
     ->using(new OpenAI('SK-***', 'gpt-4o-mini'))
     ->withSystemMessage('You are a helpful assistant that can answer questions and help with tasks your name is John Doe.')
-    ->withPrompt('What is your name?')
+    ->executePrompt('What is your name?')
     ->asText();
 ```
 
