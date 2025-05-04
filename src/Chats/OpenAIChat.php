@@ -42,8 +42,8 @@ class OpenAIChat extends BaseChat
         }
         
         $this->openaiConfig = $config;
-        $this->model = $args['model'];
-        $this->systemMessage = $args['systemMessage'];
+        $this->model = $args['model'] ?? 'gpt-4o';
+        $this->systemMessage = $args['systemMessage'] ?? '';
     }
     
     /**
