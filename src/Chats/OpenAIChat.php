@@ -6,6 +6,7 @@ use OpenAI;
 use OpenAI\Client;
 use LabsLLM\Messages\Message;
 use LabsLLM\Config\OpenAIConfig;
+use LabsLLM\Messages\MessagesBag;
 use LabsLLM\Config\ConfigInterface;
 
 /**
@@ -45,14 +46,21 @@ class OpenAIChat extends BaseChat
     {
         $client = OpenAI::client($this->apiKey);
 
-        $result = $client->chat()->create([
-            'model' => $this->model,
-            'messages' => [
-                ...($this->systemMessage ? [Message::system($this->systemMessage)] : []),
-                Message::user($prompt),
-            ],
+        $messages = MessagesBag::create([
+            ...($this->systemMessage ? [Message::system($this->systemMessage)] : []),
+            Message::user($prompt),
         ]);
 
-        $this->lastResponse = new Message('assistant', $result->choices[0]->message->content);
+        $result = $client->chat()->create([
+            'model' => $this->model,
+            'messages' => $messages->toArray()
+        ]);
+
+        $response = Message::assistant($result->choices[0]->message->content);
+        $messages->add($response);
+        
+        $this->lastResponse = $response;
+        $this->messagesBag = $messages;
+
     }
 } 

@@ -2,9 +2,10 @@
 
 namespace LabsLLM\Chats;
 
+use LabsLLM\Messages\Message;
+use LabsLLM\Messages\MessagesBag;
 use LabsLLM\Config\ConfigInterface;
 use LabsLLM\Contracts\ChatInterface;
-use LabsLLM\Messages\Message;
 
 /**
  * Base class for all chats
@@ -23,6 +24,11 @@ abstract class BaseChat implements ChatInterface
      * Last response received
      */
     protected ?Message $lastResponse = null;
+
+    /**
+     * chat history
+     */
+    protected MessagesBag $messagesBag;
     
     /**
      * Sends a message to the chat
@@ -57,6 +63,16 @@ abstract class BaseChat implements ChatInterface
     public function asText(): string
     {
         return $this->lastResponse ? $this->lastResponse->getContent() : '';
+    }
+
+    /**
+     * Gets the history of the chat
+     *
+     * @return MessagesBag
+     */
+    public function getHistory(): MessagesBag
+    {
+        return $this->messagesBag;
     }
     
     /**

@@ -43,7 +43,7 @@ class Message
      *
      * @return array
      */
-    private function toArray(): array
+    public function toArray(): array
     {
         return [
             'role' => $this->role,
@@ -57,9 +57,9 @@ class Message
      * @param string $content
      * @return \LabsLLM\Messages\Message
      */
-    public static function user(string $content): array
+    public static function user(string $content): self
     {
-        return (new self('user', $content))->toArray();
+        return new self('user', $content);
     }
     
     /**
@@ -68,9 +68,9 @@ class Message
      * @param string $content
      * @return \LabsLLM\Messages\Message
      */
-    public static function assistant(string $content): array
+    public static function assistant(string $content): self
     {
-        return (new self('assistant', $content))->toArray();
+        return new self('assistant', $content);
     }
     
     /**
@@ -79,9 +79,9 @@ class Message
      * @param string $content
      * @return \LabsLLM\Messages\Message
      */
-    public static function system(string $content): array
+    public static function system(string $content): self
     {
-        return (new self('system', $content))->toArray();
+        return new self('system', $content);
     }
     
     /**

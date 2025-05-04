@@ -3,6 +3,7 @@
 namespace LabsLLM\Contracts;
 
 use LabsLLM\Messages\Message;
+use LabsLLM\Messages\MessagesBag;
 
 /**
  * Interface for chat implementations
@@ -31,5 +32,11 @@ interface ChatInterface
      * @return string
      */
     public function asText(): string;
-    
+
+    /**
+     * Gets the history of the chat
+     *
+     * @return MessagesBag
+     */
+    public function getHistory(): MessagesBag;
 } 
