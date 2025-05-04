@@ -2,9 +2,6 @@
 
 namespace LabsLLM;
 
-use LabsLLM\Enums\Provider;
-use LabsLLM\Config\OpenAIConfig;
-use LabsLLM\Config\ConfigInterface;
 use LabsLLM\Contracts\ChatInterface;
 use LabsLLM\Providers\ProviderInterface;
 use LabsLLM\Exceptions\ProviderNotFoundException;
@@ -18,7 +15,6 @@ class Request
      * Provider to be used
      */
     private ProviderInterface $provider;
-    private ?string $prompt = null;
     private ?string $systemMessage = null;
     
     /**
@@ -37,13 +33,11 @@ class Request
      * Sets the prompt to be sent
      *
      * @param string $prompt
-     * @return self
+     * @return ChatInterface
      */
-    public function withPrompt(string $prompt): self
+    public function fromPrompt(string $prompt): ChatInterface
     {
-        $this->prompt = $prompt;
-        
-        return $this;
+        return $this->getChat()->send($prompt);
     }
 
     /**
@@ -56,16 +50,6 @@ class Request
     {
         $this->systemMessage = $message;
         return $this;
-    }
-    
-    /**
-     * Gets the response as text
-     *
-     * @return string
-     */
-    public function asText(): string
-    {
-        return $this->getChat()->send($this->prompt)->asText();
     }
     
     /**
