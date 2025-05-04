@@ -17,7 +17,7 @@ interface ChatInterface
      * @param array $options 
      * @return array
      */
-    public function executePrompt(string $prompt, array $options = []): array;
+    public function executePrompt(array $options = []): array;
 
     /**
      * Process the response from the provider
