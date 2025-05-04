@@ -3,6 +3,7 @@
 namespace LabsLLM\Helpers;
 
 use LabsLLM\Contracts\ParameterInterface;
+use PhpParser\Node\NullableType;
 
 class FunctionHelper
 {
@@ -70,5 +71,19 @@ class FunctionHelper
                 ] : []),
             ],
         ];
+    }
+
+    public function execute(array $arguments): array
+    {
+        $response = ($this->function)($arguments);
+        return [
+            'success' => true,
+            'response' => is_string($response) ? $response : json_encode($response)
+        ];
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 }
