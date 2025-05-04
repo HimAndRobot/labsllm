@@ -15,7 +15,9 @@ class Message
      */
     function __construct(
         protected string $role,
-        protected string $content
+        protected string|null $content,
+        protected array|null $toolCalls = null,
+        protected string|null $toolCallId = null
     ) {}
     
     /**
@@ -47,7 +49,9 @@ class Message
     {
         return [
             'role' => $this->role,
-            'content' => $this->content
+            'content' => $this->content,
+            ...($this->toolCalls ? ['tool_calls' => $this->toolCalls] : []),
+            ...($this->toolCallId ? ['tool_call_id' => $this->toolCallId] : [])
         ];
     }
     
@@ -68,9 +72,9 @@ class Message
      * @param string $content
      * @return \LabsLLM\Messages\Message
      */
-    public static function assistant(string $content): self
+    public static function assistant(string|null $content, array|null $toolCalls = null): self
     {
-        return new self('assistant', $content);
+        return new self('assistant', $content, ($toolCalls ? $toolCalls : []));
     }
     
     /**
@@ -82,6 +86,11 @@ class Message
     public static function system(string $content): self
     {
         return new self('system', $content);
+    }
+
+    public static function tool(string $content, string $id): self
+    {
+        return new self('tool', $content, null, $id);
     }
     
     /**
