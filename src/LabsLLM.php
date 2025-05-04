@@ -2,7 +2,7 @@
 
 namespace LabsLLM;
 
-use LabsLLM\Enums\Provider;
+use LabsLLM\TextWrapper;
 
 /**
  * Main class that serves as the entry point for the library
@@ -17,11 +17,11 @@ class LabsLLM
     /**
      * Starts a text request
      *
-     * @return \LabsLLM\Request
+     * @return \LabsLLM\TextWrapper
      */
     public static function text()
     {
-        return new Request();
+        return new TextWrapper();
     }
     
     /**

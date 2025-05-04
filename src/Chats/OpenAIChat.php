@@ -3,64 +3,44 @@
 namespace LabsLLM\Chats;
 
 use OpenAI;
-use OpenAI\Client;
-use LabsLLM\Messages\Message;
-use LabsLLM\Config\OpenAIConfig;
-use LabsLLM\Messages\MessagesBag;
-use LabsLLM\Config\ConfigInterface;
 
 /**
  * Chat for the OpenAI provider
  */
 class OpenAIChat extends BaseChat
-{
-
-    /**
-     * OpenAI model
-     */
-    protected string $model;
-
-    /**
-     * OpenAI API key
-     */
-    protected string $apiKey;
-
-    /**
-     * System message
-     */
-    protected string $systemMessage;
-
-    public function __construct(array $args)
-    {   
-        $this->model = $args['provider']->getModel();
-        $this->systemMessage = $args['systemMessage'] ?? '';
-        $this->apiKey = $args['provider']->getApiKey();
-    }
-    
+{   
     /**
      * Executes the request to the provider
      *
      * @return void
      */
-    protected function execute(string $prompt): void
+    public function executePrompt(string $prompt, array $options = []): array
     {
         $client = OpenAI::client($this->apiKey);
 
-        $messages = MessagesBag::create([
-            ...($this->systemMessage ? [Message::system($this->systemMessage)] : []),
-            Message::user($prompt),
-        ]);
-
         $result = $client->chat()->create([
             'model' => $this->model,
-            'messages' => $messages->toArray()
+            'messages' => $options['messages'] ?? []
         ]);
-
-        $response = Message::assistant($result->choices[0]->message->content);
-        $messages->add($response);
         
-        $this->lastResponse = $response;
-        $this->messagesBag = $messages;
+        return $this->processResponse($result);
+    }
 
+    /**
+     * Process the response from the provider
+     *
+     * @param object $response
+     * @return array
+     */
+    public function processResponse(object $response): array
+    {
+        if ($response->choices[0]->message->content) {
+            return [
+                'type' => 'text',
+                'response' => $response->choices[0]->message->content
+            ];
+        }
+
+        throw new \Exception('No response from OpenAI');
     }
 } 

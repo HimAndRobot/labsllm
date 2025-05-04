@@ -2,83 +2,27 @@
 
 namespace LabsLLM\Chats;
 
-use LabsLLM\Messages\Message;
-use LabsLLM\Messages\MessagesBag;
-use LabsLLM\Config\ConfigInterface;
 use LabsLLM\Contracts\ChatInterface;
+use LabsLLM\Providers\OpenAI;
 
 /**
  * Base class for all chats
  */
 abstract class BaseChat implements ChatInterface
 {
-    
     /**
-     * Chat messages
-     *
-     * @var Message[]
+     * Chat model
      */
-    protected array $messages = [];
-    
-    /**
-     * Last response received
-     */
-    protected ?Message $lastResponse = null;
+    protected string $model;
 
     /**
-     * chat history
+     * Chat API key
      */
-    protected MessagesBag $messagesBag;
-    
-    /**
-     * Sends a message to the chat
-     *
-     * @param Message|string $message
-     * @return self
-     */
-    public function send(Message|string $prompt): self
+    protected string $apiKey;
+
+    public function __construct(OpenAI $provider)
     {   
-        $this->execute($prompt);
-        return $this;
+        $this->model = $provider->getModel();
+        $this->apiKey = $provider->getApiKey();
     }
-    
-    /**
-     * Adds a system message
-     *
-     * @param string $message
-     * @return self
-     */
-    public function system(string $message): self
-    {
-        $this->messages[] = Message::system($message);
-        
-        return $this;
-    }
-    
-    /**
-     * Gets the response as text
-     *
-     * @return string
-     */
-    public function asText(): string
-    {
-        return $this->lastResponse ? $this->lastResponse->getContent() : '';
-    }
-
-    /**
-     * Gets the history of the chat
-     *
-     * @return MessagesBag
-     */
-    public function getHistory(): MessagesBag
-    {
-        return $this->messagesBag;
-    }
-    
-    /**
-     * Executes the request to the provider
-     *
-     * @return void
-     */
-    abstract protected function execute(string $prompt): void;
 } 

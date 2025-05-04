@@ -13,30 +13,17 @@ interface ChatInterface
     /**
      * Sends a message to the chat
      *
-     * @param Message|string $message
-     * @return self
+     * @param string $prompt
+     * @param array $options 
+     * @return array
      */
-    public function send(Message|string $message): self;
-    
-    /**
-     * Adds a system message
-     *
-     * @param string $message
-     * @return self
-     */
-    public function system(string $message): self;
-    
-    /**
-     * Gets the response as text
-     *
-     * @return string
-     */
-    public function asText(): string;
+    public function executePrompt(string $prompt, array $options = []): array;
 
     /**
-     * Gets the history of the chat
+     * Process the response from the provider
      *
-     * @return MessagesBag
+     * @param object $response
+     * @return array
      */
-    public function getHistory(): MessagesBag;
+    public function processResponse(object $response): array;
 } 

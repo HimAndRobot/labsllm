@@ -1,6 +1,6 @@
 <?php
 
-namespace LabsLLM\Providers;
+namespace LabsLLM\Contracts;
 
 /**
  * Interface for provider configurations
@@ -20,4 +20,11 @@ interface ProviderInterface
      * @return string
      */
     public function getModel(): string;
+
+    /**
+     * Returns the name of the provider
+     *
+     * @return string
+     */
+    public function getName(): string;
 } 
