@@ -15,7 +15,7 @@ Sending a simple prompt to an LLM:
 ```php
 // With prompt only
 $response = LabsLLM::text()
-    ->using(new OpenAI($apiKey, 'gpt-4o-mini'))
+    ->using(new OpenAI('SK-***', 'gpt-4o-mini'))
     ->withPrompt('Your question here')
     ->asText();
 ```
@@ -27,8 +27,9 @@ You can include system instructions in your prompt:
 ```php
 // With system instructions
 $response = LabsLLM::text()
-    ->using(new OpenAI($apiKey, 'gpt-4o-mini'))
-    ->withPrompt('System: Act as a historian\nUser: Tell me about knights')
+    ->using(new OpenAI('SK-***', 'gpt-4o-mini'))
+    ->withSystemMessage('You are a helpful assistant that can answer questions and help with tasks your name is John Doe.')
+    ->withPrompt('What is your name?')
     ->asText();
 ```
 
@@ -44,6 +45,7 @@ Legend:
 |---------|--------|-----------|--------|
 | Text Prompts | ✅ | 🚧 | 📅 |
 | System Instructions | ✅ | 🚧 | 📅 |
+| Chat | ✅ | 🚧 | 📅 |
 | Tools/Functions | 🚧 | 📅 | ❌ |
 | Embeddings | 📅 | ❌ | ❌ |
 | Voice | 📅 | ❌ | ❌ |
