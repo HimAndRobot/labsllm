@@ -164,8 +164,12 @@ foreach ($response->called_tools as $tool) {
 Currently, the library supports the following parameter types:
 
 - **StringParameter**: For text values
+  - `name`: The name of the parameter
+  - `description`: The description of the parameter
+  - `enum`: An array of allowed values for the parameter (optional but recommended)
+
   ```php
-  new StringParameter('name', 'Description of the parameter')
+  new StringParameter('name', 'Description of the parameter', ['enum1', 'enum2'])
   ```
 
 More parameter types will be added in future releases.
