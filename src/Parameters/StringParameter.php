@@ -12,11 +12,14 @@ class StringParameter implements ParameterInterface
 
     protected string $description;
 
+    protected array $enum;
 
-    public function __construct(string $name, string $description)
+
+    public function __construct(string $name, string $description, array $enum = [])
     {
         $this->name = $name;
         $this->description = $description;
+        $this->enum = $enum;
     }
 
 
@@ -30,6 +33,7 @@ class StringParameter implements ParameterInterface
         return [
             'type' => $this->type,
             'description' => $this->description,
+            ...(count($this->enum) > 0 ? ['enum' => $this->enum] : []),
         ];
     }
 }
