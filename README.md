@@ -214,7 +214,9 @@ Legend:
 | Text Prompts | ✅ | 🚧 | 📅 |
 | System Instructions | ✅ | 🚧 | 📅 |
 | Chat | ✅ | 🚧 | 📅 |
-| Tools/Functions | ✅ | 📅 | ❌ |
+| Tools/Functions | ✅ | 📅 | ❌ 
+| Structure Output | 🚧 | 📅 | ❌ |
+| Streaming | 🚧 | 📅 | ❌ |
 | Embeddings | 📅 | ❌ | ❌ |
 | Voice | 📅 | ❌ | ❌ |
 | Image Generation | 📅 | ❌ | 📅 | 
