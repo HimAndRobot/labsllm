@@ -4,12 +4,12 @@ namespace LabsLLM\Parameters;
 
 use LabsLLM\Contracts\ParameterInterface;
 
-class StringParameter implements ParameterInterface
+class ArrayParameter implements ParameterInterface
 {
      /**
      * @var string
      */
-    protected string $type = 'string';
+    protected string $type = 'array';
 
     /**
      * @var string
@@ -22,21 +22,21 @@ class StringParameter implements ParameterInterface
     protected string $description;
 
     /**
-     * @var array
+     * @var ParameterInterface
      */
-    protected array $enum;
+    protected ParameterInterface $items;
 
 
     /**
      * @param string $name
      * @param string $description
-     * @param array $enum
+     * @param ParameterInterface $items
      */
-    public function __construct(string $name, string $description, array $enum = [])
+    public function __construct(string $name, string $description, ParameterInterface $items)
     {
         $this->name = $name;
         $this->description = $description;
-        $this->enum = $enum;
+        $this->items = $items;
     }
 
     /**
@@ -72,7 +72,9 @@ class StringParameter implements ParameterInterface
         return [
             'type' => $this->type,
             'description' => $this->description,
-            ...(count($this->enum) > 0 ? ['enum' => $this->enum] : []),
+            'items' => [
+                'type' => $this->items->getType(),
+            ]
         ];
     }
 }

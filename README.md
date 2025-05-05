@@ -169,8 +169,32 @@ Currently, the library supports the following parameter types:
   - `enum`: An array of allowed values for the parameter (optional but recommended)
 
   ```php
-  new StringParameter('name', 'Description of the parameter', ['enum1', 'enum2'])
+  new StringParameter('method', 'method to pay', ['card', 'money'])
   ```
+
+- **NumberParameter**: For numeric values
+  - `name`: The name of the parameter
+  - `description`: The description of the parameter
+
+  ```php
+  new NumberParameter('age', 'age of the person')
+  ```
+
+- **BooleanParameter**: For boolean values
+  - `name`: The name of the parameter
+  - `description`: The description of the parameter
+
+  ```php
+  new BooleanParameter('isPaid', 'if the payment was made')
+  ```
+
+- **ArrayParameter**: For arrays
+  - `name`: The name of the parameter
+  - `description`: The description of the parameter
+  - `items`: The type of the items in the array
+
+  ```php
+  new ArrayParameter('names', 'names of the people', items: new StringParameter('name', 'name of the person'))
 
 More parameter types will be added in future releases.
 
