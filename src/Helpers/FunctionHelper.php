@@ -8,23 +8,43 @@ use PhpParser\Node\NullableType;
 class FunctionHelper
 {
 
+    /**
+     * @var string
+     */
     protected string $name;
 
+    /**
+     * @var string
+     */
     protected string $description;
 
-    protected array $parameters;
+    /**
+     * @var array<ParameterInterface>
+     */
 
     protected array $requiredParameters;
 
+    /**
+     * @var \Closure
+     */
     protected \Closure $function;
 
+
+    /**
+     * @param string $name
+     * @param string $description
+     */
     public function __construct(string $name, string $description)
     {
         $this->name = $name;
         $this->description = $description;
     }
-    
 
+    /**
+     * @param string $name
+     * @param string $description
+     * @return FunctionHelper
+     */
     public static function create(string $name, string $description): FunctionHelper
     {
         $instance = new self($name, $description);
@@ -34,6 +54,8 @@ class FunctionHelper
 
     /**
      * @param array<ParameterInterface> $parameters
+     * @param array<string> $requiredParameters
+     * @return FunctionHelper
      */
     public function withParameter(array $parameters, array $requiredParameters = []): FunctionHelper
     {
@@ -42,12 +64,19 @@ class FunctionHelper
         return $this;
     }
 
+    /**
+     * @param \Closure $function
+     * @return FunctionHelper
+     */
     public function callable(\Closure $function): FunctionHelper
     {
         $this->function = $function;
         return $this;
     }
 
+    /**
+     * @return array
+     */
     public function toArray(): array
     {
         $properties = [];
@@ -73,6 +102,10 @@ class FunctionHelper
         ];
     }
 
+    /**
+     * @param array<mixed> $arguments
+     * @return array<string, mixed>
+     */
     public function execute(array $arguments): array
     {
         $response = ($this->function)(...$arguments);
@@ -82,6 +115,10 @@ class FunctionHelper
         ];
     }
 
+    /**
+     * Summary of getName
+     * @return string
+     */
     public function getName(): string
     {
         return $this->name;
