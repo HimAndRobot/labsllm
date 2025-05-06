@@ -34,10 +34,10 @@ $response = $execute->getResponseData();
 $response->response;
 
 // Function/tool calls requested by the model (array)
-$response->function_calls;
+$response->functionCalls;
 
 // Tools that were executed with their results (array)
-$response->called_tools;
+$response->calledTools;
 ```
 
 ### Response Elements
