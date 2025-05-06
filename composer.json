@@ -8,6 +8,11 @@
             "LabsLLM\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "HimAndRobot",
@@ -19,5 +24,15 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5"
+    },
+    "scripts": {
+        "test": "phpunit --testdox",
+        "test:unit": "phpunit --testsuite=Unit --testdox",
+        "test:integration": "phpunit --testsuite=Integration --group=integration --testdox"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     }
 } 
