@@ -5,9 +5,11 @@ namespace LabsLLM;
 use LabsLLM\Chats\OpenAIChat;
 use LabsLLM\Messages\Message;
 use LabsLLM\Messages\MessagesBag;
+use LabsLLM\Response\TextResponse;
 use LabsLLM\Helpers\FunctionHelper;
 use LabsLLM\Contracts\ChatInterface;
 use LabsLLM\Parameters\ObjectParameter;
+use LabsLLM\Response\StructureResponse;
 use LabsLLM\Contracts\ProviderInterface;
 
 /**
@@ -73,7 +75,7 @@ class TextWrapper
      * Output structure for the LLM
      * @var ObjectParameter
      */
-    protected ObjectParameter $outputStructure;
+    protected ObjectParameter $outputSchema;
 
     /**
      * Sets the LLM provider to be used
@@ -144,12 +146,12 @@ class TextWrapper
     /**
      * Sets the output structure for the LLM
      *
-     * @param ObjectParameter $outputStructure The output structure
+     * @param ObjectParameter $outputSchema The output schema
      * @return self
      */
-    public function withOutputStructure(ObjectParameter $outputStructure): self   
+    public function withOutputSchema(ObjectParameter $outputSchema): self   
     {
-        $this->outputStructure = $outputStructure;
+        $this->outputSchema = $outputSchema;
         return $this;
     }
 
@@ -198,7 +200,7 @@ class TextWrapper
             'tools' => array_map(function (FunctionHelper $tool) {
                 return $tool->toArray();
             }, $this->tools),
-            ...(isset($this->outputStructure) ? ['output_structure' => $this->outputStructure->mountBody()] : [])
+            ...(isset($this->outputSchema) ? ['output_schema' => $this->outputSchema->mountBody()] : [])
         ]);
 
         $this->currentStep++;
@@ -261,30 +263,28 @@ class TextWrapper
     /**
      * Gets the complete response data including text and tool calls
      *
-     * @return \stdClass Object containing response text and tool information
+     * @return TextResponse
      */
-    public function getResponseData(): \stdClass
+    public function getResponseData(): TextResponse
     {
-        $responseObj = new \stdClass();
-        $responseObj->response = $this->lastResponse['response'] ?? '';
-        $responseObj->function_calls = $this->lastResponse['tools'] ?? [];
-        $responseObj->called_tools = $this->calledTools ?? [];
-
-        return $responseObj;
+        return new TextResponse(
+            $this->lastResponse['response'] ?? '',
+            $this->lastResponse['tools'] ?? [],
+            $this->calledTools ?? []
+        );
     }
     /** 
-     * Get the response with the output structure
+     * Get the response with the output structure and the tool calls
      * 
-     * @return \stdClass Object containing response text and tool information
+     * @return StructureResponse
      */
-    public function getStructureResponse(): \stdClass
+    public function getStructureResponse(): StructureResponse
     {
-        $responseObj = new \stdClass();
-        $responseObj->structure = json_decode($this->lastResponse['response']);
-        $responseObj->function_calls = $this->lastResponse['tools'] ?? [];
-        $responseObj->called_tools = $this->calledTools ?? [];
-
-        return $responseObj;
+        return new StructureResponse(
+            json_decode($this->lastResponse['response']),
+            $this->lastResponse['tools'] ?? [],
+            $this->calledTools ?? []
+        );
     }
 
     /**

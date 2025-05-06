@@ -22,11 +22,11 @@ class OpenAIChat extends BaseChat
             'model' => $this->model,
             'messages' => $options['messages'] ?? [],
             ...($options['tools'] ? ['tools' => $options['tools']] : []),
-            ...(isset($options['output_structure']) ? ['response_format' => [
+            ...(isset($options['output_schema']) ? ['response_format' => [
                 'type' => 'json_schema',
                 'json_schema' => [
                     'name' => 'response',
-                    'schema' => $options['output_structure']
+                    'schema' => $options['output_schema']
                 ]
             ]] : [])
         ]);
