@@ -19,6 +19,11 @@ class FunctionHelper
     protected string $description;
 
     /**
+     * @var array<string>
+     */
+    protected array $parameters;
+
+    /**
      * @var array<ParameterInterface>
      */
 
@@ -50,7 +55,6 @@ class FunctionHelper
         $instance = new self($name, $description);
         return $instance;
     }
-
 
     /**
      * @param array<ParameterInterface> $parameters
