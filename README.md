@@ -196,7 +196,24 @@ Currently, the library supports the following parameter types:
   ```php
   new ArrayParameter('names', 'names of the people', items: new StringParameter('name', 'name of the person'))
 
+- **ObjectParameter**: For complex objects
+  - `name`: The name of the parameter
+  - `description`: The description of the parameter
+  - `properties`: Array of other parameters that make up the object
+  - `required`: Array with names of required fields within the object
+
+  ```php
+  new ObjectParameter('user', 'User data', [
+      new StringParameter('name', 'The name of the user'),
+      new NumberParameter('age', 'The age of the user'),
+      new ArrayParameter('skills', 'The skills of the user', 
+          new StringParameter('skill', 'A skill of the user'))
+  ], ['name', 'age']) // name and age are required fields
+  ```
+
 More parameter types will be added in future releases.
+
+> **Important**: Some LLM models may have difficulty correctly respecting fields marked as required, especially in nested object structures. If you notice that the model is ignoring the required fields, consider specifying these restrictions directly in the function or parameter description to increase the likelihood of the model correctly following the expected structure.
 
 ### Important Notes About Functions
 
