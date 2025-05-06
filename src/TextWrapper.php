@@ -7,6 +7,7 @@ use LabsLLM\Messages\Message;
 use LabsLLM\Messages\MessagesBag;
 use LabsLLM\Helpers\FunctionHelper;
 use LabsLLM\Contracts\ChatInterface;
+use LabsLLM\Parameters\ObjectParameter;
 use LabsLLM\Contracts\ProviderInterface;
 
 /**
@@ -67,6 +68,12 @@ class TextWrapper
      * @var int
      */
     protected int $currentStep = 0;
+
+    /**
+     * Output structure for the LLM
+     * @var ObjectParameter
+     */
+    protected ObjectParameter $outputStructure;
 
     /**
      * Sets the LLM provider to be used
@@ -135,6 +142,18 @@ class TextWrapper
     }
 
     /**
+     * Sets the output structure for the LLM
+     *
+     * @param ObjectParameter $outputStructure The output structure
+     * @return self
+     */
+    public function withOutputStructure(ObjectParameter $outputStructure): self   
+    {
+        $this->outputStructure = $outputStructure;
+        return $this;
+    }
+
+    /**
      * Executes an initial prompt, starting the conversation
      *
      * @param string $prompt The initial question or instruction
@@ -178,7 +197,8 @@ class TextWrapper
             'messages' => $messagesBag->toArray(),
             'tools' => array_map(function (FunctionHelper $tool) {
                 return $tool->toArray();
-            }, $this->tools)
+            }, $this->tools),
+            ...(isset($this->outputStructure) ? ['output_structure' => $this->outputStructure->mountBody()] : [])
         ]);
 
         $this->currentStep++;
@@ -247,6 +267,20 @@ class TextWrapper
     {
         $responseObj = new \stdClass();
         $responseObj->response = $this->lastResponse['response'] ?? '';
+        $responseObj->function_calls = $this->lastResponse['tools'] ?? [];
+        $responseObj->called_tools = $this->calledTools ?? [];
+
+        return $responseObj;
+    }
+    /** 
+     * Get the response with the output structure
+     * 
+     * @return \stdClass Object containing response text and tool information
+     */
+    public function getStructureResponse(): \stdClass
+    {
+        $responseObj = new \stdClass();
+        $responseObj->structure = json_decode($this->lastResponse['response']);
         $responseObj->function_calls = $this->lastResponse['tools'] ?? [];
         $responseObj->called_tools = $this->calledTools ?? [];
 
