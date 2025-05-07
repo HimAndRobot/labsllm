@@ -280,6 +280,10 @@ class TextWrapper
      */
     public function getStructureResponse(): StructureResponse
     {
+        if (!isset($this->outputSchema)) {
+            throw new \Exception('Output schema not set. Use the withOutputSchema() method before getting the structure response.');
+        }
+
         return new StructureResponse(
             json_decode($this->lastResponse['response']),
             $this->lastResponse['tools'] ?? [],

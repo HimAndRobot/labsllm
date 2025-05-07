@@ -74,6 +74,7 @@ class ArrayParameter implements ParameterInterface
             'description' => $this->description,
             'items' => [
                 'type' => $this->items->getType(),
+                ...($this->items->getType() == 'object' ? ['properties' => $this->items->getProperties()] : [])
             ]
         ];
     }

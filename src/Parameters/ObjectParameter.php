@@ -70,10 +70,9 @@ class ObjectParameter implements ParameterInterface
     }
 
     /**
-     * Summary of mountBody
-     * @return array{description: string, type: string}
+     * @return array<ParameterInterface>
      */
-    public function mountBody(): array
+    public function getProperties(): array
     {
         $properties = [];
 
@@ -81,10 +80,19 @@ class ObjectParameter implements ParameterInterface
             $properties[$property->getName()] = $property->mountBody();
         }
 
+        return $properties;
+    }
+
+    /**
+     * Summary of mountBody
+     * @return array{description: string, type: string}
+     */
+    public function mountBody(): array
+    {
         return [
             'type' => $this->type,
             'description' => $this->description,
-            'properties' => $properties,
+            'properties' => $this->getProperties(),
             ...(isset($this->required) ? ['required' => $this->required] : []),
         ];
     }
