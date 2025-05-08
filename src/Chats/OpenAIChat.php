@@ -23,6 +23,31 @@ class OpenAIChat extends BaseChat
         return $this->processResponse($result);
     }
 
+    public function executeStream(array $options = []): \Generator | array
+    {
+        $client = OpenAI::client($this->apiKey);
+
+        $stream = $client->chat()->createStreamed(parameters: $this->parseBodyFormPrompt($options));
+        $toolsCalled = [];
+        foreach ($stream as $response) {
+            if (isset($response->choices[0]->delta->content)) {
+                yield [
+                    'type' => 'text',
+                    'response' => $response->choices[0]->delta->content
+                ];
+            } elseif (isset($response->choices[0]->delta->toolCalls[0]->id)) {
+                $toolsCalled[] = $response->choices[0]->delta->toolCalls[0];
+            } else {
+            }
+        }
+        
+        yield [
+            'type' => 'tool',
+            'rawResponse' => $toolsCalled,
+            'tools' => $this->processToolForResponse($toolsCalled)
+        ];
+    }
+
     /**
      * Parse the body for the prompt
      *

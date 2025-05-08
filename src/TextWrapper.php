@@ -181,6 +181,17 @@ class TextWrapper
         return $this;
     }
 
+    public function executePromptStream(string $prompt): \Generator
+    {
+        $messagesBag = MessagesBag::create([
+            ...(isset($this->systemMessage) ? [Message::system($this->systemMessage)] : []),
+            Message::user($prompt)
+        ]);
+        
+        yield from $this->executeChat($messagesBag, true);
+
+    }
+
     /**
      * Sends current messages to the LLM and processes the response
      *
@@ -188,24 +199,38 @@ class TextWrapper
      * @return self
      * @throws \Exception If the provider is not set
      */
-    public function executeChat(MessagesBag $messagesBag): self
+    public function executeChat(MessagesBag $messagesBag, bool $stream = false): \Generator | self
     {
         $this->messagesBag = $messagesBag;
         if (!isset($this->provider)) {
             throw new \Exception('Provider not set. Use the using() method before executing the prompt.');
         }
 
-        $response = $this->chatProvider->executePrompt([
+        $options = [
             'messages' => $messagesBag->toArray(),
             'tools' => array_map(function (FunctionHelper $tool) {
                 return $tool->toArray();
             }, $this->tools),
             ...(isset($this->outputSchema) ? ['output_schema' => $this->outputSchema->mountBody()] : [])
-        ]);
+        ];
 
         $this->currentStep++;
-        $this->processResponse($response);
-        
+
+        if ($stream) {
+
+            $response = $this->chatProvider->executeStream($options);
+            foreach ($response as $responseItem) {
+                if ($responseItem['type'] === 'text') {
+                    yield new TextResponse($responseItem['response'], [], []);
+                } else if ($responseItem['type'] === 'tool') {
+                    yield from $this->executeTool($responseItem['tools'], $responseItem['rawResponse']);
+                }
+            }
+
+        } else {
+            $response = $this->chatProvider->executePrompt($options);
+            $this->processResponse($response);
+        }
         return $this;
     }
 
@@ -234,7 +259,7 @@ class TextWrapper
      * @return void
      * @throws \Exception If a requested tool is not found
      */
-    private function executeTool(array $tools, array $rawResponse): void
+    private function executeTool(array $tools, array $rawResponse): \Generator
     {
         $this->messagesBag->add(Message::assistant(null, (array) $rawResponse)); 
 
@@ -248,15 +273,14 @@ class TextWrapper
                 throw new \Exception('Failed to execute tool: ' . $toolResponse['name'] . ' (tool not found)');
             }
 
-            $response = $tool->execute($toolResponse['arguments']);
+            $response = $tool->execute($toolResponse['arguments'] ?? []);
             $this->messagesBag->add(Message::tool($response['response'], $toolResponse['id'])); 
             $toolResponse['response'] = $response;
             $this->calledTools[] = $toolResponse;
             $this->lastResponse['tools'] = $tools;
         }
-
         if ($this->currentStep < $this->maxSteps) {
-            $this->executeChat($this->messagesBag);
+            yield from $this->executeChat($this->messagesBag, true);
         }
     }
 
