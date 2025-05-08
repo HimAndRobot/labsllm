@@ -23,7 +23,13 @@ class OpenAIChat extends BaseChat
         return $this->processResponse($result);
     }
 
-    protected function parseBodyFormPrompt(array $options): array
+    /**
+     * Parse the body for the prompt
+     *
+     * @param array $options
+     * @return array
+     */
+    private function parseBodyFormPrompt(array $options): array
     {
         return [
             'model' => $this->model,
@@ -38,8 +44,6 @@ class OpenAIChat extends BaseChat
             ]] : [])
         ];
     }
-    
-    
 
     /**
      * Process the response from the provider
@@ -71,7 +75,7 @@ class OpenAIChat extends BaseChat
      * @param array $tools
      * @return array
      */
-    protected function processToolForResponse(array $tools): array
+    private function processToolForResponse(array $tools): array
     {
         return array_map(function ($tool) {
                 return [
