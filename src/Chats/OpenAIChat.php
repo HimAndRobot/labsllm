@@ -18,7 +18,14 @@ class OpenAIChat extends BaseChat
     {
         $client = OpenAI::client($this->apiKey);
 
-        $result = $client->chat()->create(parameters: [
+        $result = $client->chat()->create(parameters: $this->parseBodyFormPrompt($options));
+
+        return $this->processResponse($result);
+    }
+
+    protected function parseBodyFormPrompt(array $options): array
+    {
+        return [
             'model' => $this->model,
             'messages' => $options['messages'] ?? [],
             ...($options['tools'] ? ['tools' => $options['tools']] : []),
@@ -29,10 +36,10 @@ class OpenAIChat extends BaseChat
                     'schema' => $options['output_schema']
                 ]
             ]] : [])
-        ]);
-
-        return $this->processResponse($result);
+        ];
     }
+    
+    
 
     /**
      * Process the response from the provider
@@ -51,16 +58,27 @@ class OpenAIChat extends BaseChat
             return [
                 'type' => 'tool',
                 'rawResponse' => $response->choices[0]->message->toolCalls,
-                'tools' => array_map(function ($tool) {
-                    return [
-                        'id' => $tool->id,
-                        'name' => $tool->function->name,
-                        'arguments' => json_decode($tool->function->arguments, true)
-                    ];
-                }, $response->choices[0]->message->toolCalls)
+                'tools' => $this->processToolForResponse($response->choices[0]->message->toolCalls)
             ];
         }
 
         throw new \Exception('No response from OpenAI');
+    }
+
+    /**
+     * Process the tools for the response
+     *
+     * @param array $tools
+     * @return array
+     */
+    protected function processToolForResponse(array $tools): array
+    {
+        return array_map(function ($tool) {
+                return [
+                    'id' => $tool->id,
+                    'name' => $tool->function->name,
+                    'arguments' => json_decode($tool->function->arguments, true)
+            ];
+        }, $tools);
     }
 } 
