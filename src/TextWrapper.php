@@ -189,7 +189,7 @@ class TextWrapper
             Message::user($prompt)
         ]);
         
-        yield from $this->executeStreamChat($messagesBag);
+        yield from $this->executeChatStream($messagesBag);
 
     }
 
@@ -225,7 +225,7 @@ class TextWrapper
      * @return self
      * @throws \Exception If the provider is not set
      */
-    public function executeStreamChat(MessagesBag $messagesBag): \Generator
+    public function executeChatStream(MessagesBag $messagesBag): \Generator
     {
         if (isset($this->outputSchema)) {
             throw new \Exception('Stream response is not supported with output schema.');
@@ -242,7 +242,7 @@ class TextWrapper
                     $result = $this->executeTool($responseItem['tools'], $responseItem['rawResponse'], true);
                     yield new StreamResponse('',  [], $result['calledTools']);
                     if ($this->currentStep < $this->maxSteps) {
-                        yield from $this->executeStreamChat($this->messagesBag);
+                        yield from $this->executeChatStream($this->messagesBag);
                     }
                     break;
             }
