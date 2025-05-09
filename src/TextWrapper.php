@@ -2,6 +2,7 @@
 
 namespace LabsLLM;
 
+use LabsLLM\Chats\GoogleChat;
 use LabsLLM\Chats\OpenAIChat;
 use LabsLLM\Messages\Message;
 use LabsLLM\Messages\MessagesBag;
@@ -90,6 +91,9 @@ class TextWrapper
         switch ($provider->getName()) {
             case 'openai':
                 $this->chatProvider = new OpenAIChat($provider);
+                break;
+            case 'google':
+                $this->chatProvider = new GoogleChat($provider);
                 break;
             default:
                 throw new \Exception('Unsupported provider: ' . $provider->getName());

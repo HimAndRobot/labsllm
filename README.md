@@ -48,7 +48,7 @@ Legend:
 
 | Feature | OpenAI | Google | Anthropic |
 |---------|--------|-----------|--------|
-| Text Prompts | ✅ | 🚧 | 📅 |
+| Text Prompts | ✅ | ✅ | 📅 |
 | System Instructions | ✅ | 🚧 | 📅 |
 | Chat | ✅ | 🚧 | 📅 |
 | Tools/Functions | ✅ | 📅 | ❌ 

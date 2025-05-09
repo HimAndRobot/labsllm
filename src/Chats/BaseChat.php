@@ -3,7 +3,7 @@
 namespace LabsLLM\Chats;
 
 use LabsLLM\Contracts\ChatInterface;
-use LabsLLM\Providers\OpenAI;
+use LabsLLM\Contracts\ProviderInterface;
 
 /**
  * Base class for all chats
@@ -20,7 +20,7 @@ abstract class BaseChat implements ChatInterface
      */
     protected string $apiKey;
 
-    public function __construct(OpenAI $provider)
+    public function __construct(ProviderInterface $provider)
     {   
         $this->model = $provider->getModel();
         $this->apiKey = $provider->getApiKey();
