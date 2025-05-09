@@ -88,6 +88,7 @@ class TextWrapper
     public function using(ProviderInterface $provider): self
     {
         $this->provider = $provider;
+
         switch ($provider->getName()) {
             case 'openai':
                 $this->chatProvider = new OpenAIChat($provider);
@@ -174,7 +175,6 @@ class TextWrapper
         }
 
         $messagesBag = MessagesBag::create([
-            ...(isset($this->systemMessage) ? [Message::system($this->systemMessage)] : []),
             Message::user($prompt)
         ]);
         
@@ -189,7 +189,6 @@ class TextWrapper
     public function executePromptStream(string $prompt): \Generator
     {
         $messagesBag = MessagesBag::create([
-            ...(isset($this->systemMessage) ? [Message::system($this->systemMessage)] : []),
             Message::user($prompt)
         ]);
         
@@ -200,6 +199,7 @@ class TextWrapper
     private function mountOptions(MessagesBag $messagesBag): array
     {
         return [
+            'systemMessage' => $this->systemMessage ?? null,
             'messages' => $messagesBag->toArray(),
             'tools' => array_map(function (FunctionHelper $tool) {
                 return $tool->toArray();

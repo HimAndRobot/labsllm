@@ -49,7 +49,7 @@ Legend:
 | Feature | OpenAI | Google | Anthropic |
 |---------|--------|-----------|--------|
 | Text Prompts | ✅ | ✅ | 📅 |
-| System Instructions | ✅ | 🚧 | 📅 |
+| System Instructions | ✅ | ✅ | 📅 |
 | Chat | ✅ | 🚧 | 📅 |
 | Tools/Functions | ✅ | 📅 | ❌ 
 | Structure Output | ✅ | 📅 | ❌ |

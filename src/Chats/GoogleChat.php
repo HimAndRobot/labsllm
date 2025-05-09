@@ -69,7 +69,14 @@ class GoogleChat extends BaseChat
     private function parseBodyFormPrompt(array $options): array
     {
         return [
-            'contents' => $this->parseMessages($options['messages'] ?? [])
+            'contents' => $this->parseMessages($options['messages'] ?? []),
+            ...(isset($options['systemMessage']) ? ['system_instruction' => [
+                'parts' => [
+                    [
+                        'text' => $options['systemMessage']
+                    ]
+                ]
+            ]] : [])
         ];
     }
 
@@ -115,7 +122,7 @@ class GoogleChat extends BaseChat
     }
 
     private function parseMessages(array $messages): array
-    {
+    {      
         return array_map(function ($message) {
             return [
                 'role' => $message['role'],
@@ -138,7 +145,7 @@ class GoogleChat extends BaseChat
     public function executeGeminiRequest(array $parameters): array
     {
         $client = new \GuzzleHttp\Client();
-        
+
         $response = $client->post("https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key=" . $this->apiKey, [
             'json' => $parameters
         ]);
