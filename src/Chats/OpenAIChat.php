@@ -19,7 +19,6 @@ class OpenAIChat extends BaseChat
         $client = OpenAI::client($this->apiKey);
 
         $result = $client->chat()->create(parameters: $this->parseBodyFormPrompt($options));
-
         return $this->processResponse($result);
     }
 
@@ -35,17 +34,32 @@ class OpenAIChat extends BaseChat
                     'type' => 'text',
                     'response' => $response->choices[0]->delta->content
                 ];
-            } elseif (isset($response->choices[0]->delta->toolCalls[0]->id)) {
-                $toolsCalled[] = $response->choices[0]->delta->toolCalls[0];
-            } else {
+            } elseif (isset($response->choices[0]->delta->toolCalls)) {
+                if (isset($response->choices[0]->delta->toolCalls[0]) && isset($response->choices[0]->delta->toolCalls[0]->id)) {
+                    $tool = (object) [
+                        'id' => $response->choices[0]->delta->toolCalls[0]->id,
+                        'type' => $response->choices[0]->delta->toolCalls[0]->type,
+                        'function' => (object) [
+                            'name' => $response->choices[0]->delta->toolCalls[0]->function->name,
+                            'arguments' => $response->choices[0]->delta->toolCalls[0]->function->arguments
+                        ]
+                    ];
+                    $toolsCalled[] = $tool;
+                } else if (isset($response->choices[0]->delta->toolCalls[0])) {
+                    $lastTool = array_pop($toolsCalled);
+                    $lastTool->function->arguments .= $response->choices[0]->delta->toolCalls[0]->function->arguments;
+                    $toolsCalled[] = $lastTool;
+                }
             }
         }
         
-        yield [
-            'type' => 'tool',
-            'rawResponse' => $toolsCalled,
-            'tools' => $this->processToolForResponse($toolsCalled)
-        ];
+        if (count($toolsCalled) > 0) {
+            yield [
+                'type' => 'tool',
+                'rawResponse' => $toolsCalled,
+                'tools' => $this->processToolForResponse($toolsCalled)
+            ];
+        }
     }
 
     /**
