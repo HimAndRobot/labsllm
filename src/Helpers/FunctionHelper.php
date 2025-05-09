@@ -110,13 +110,10 @@ class FunctionHelper
      * @param array<mixed> $arguments
      * @return array<string, mixed>
      */
-    public function execute(array $arguments): array
+    public function execute(array $arguments): string
     {
         $response = ($this->function)(...$arguments);
-        return [
-            'success' => true,
-            'response' => is_string($response) ? $response : json_encode($response)
-        ];
+        return is_string($response) ? $response : json_encode($response);
     }
 
     /**

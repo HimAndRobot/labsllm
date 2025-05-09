@@ -8,6 +8,7 @@ use LabsLLM\Messages\MessagesBag;
 use LabsLLM\Response\TextResponse;
 use LabsLLM\Helpers\FunctionHelper;
 use LabsLLM\Contracts\ChatInterface;
+use LabsLLM\Response\StreamResponse;
 use LabsLLM\Parameters\ObjectParameter;
 use LabsLLM\Response\StructureResponse;
 use LabsLLM\Contracts\ProviderInterface;
@@ -181,6 +182,42 @@ class TextWrapper
         return $this;
     }
 
+    public function executePromptStream(string $prompt): \Generator
+    {
+        $messagesBag = MessagesBag::create([
+            ...(isset($this->systemMessage) ? [Message::system($this->systemMessage)] : []),
+            Message::user($prompt)
+        ]);
+        
+        yield from $this->executeChatStream($messagesBag);
+
+    }
+
+    private function mountOptions(MessagesBag $messagesBag): array
+    {
+        return [
+            'messages' => $messagesBag->toArray(),
+            'tools' => array_map(function (FunctionHelper $tool) {
+                return $tool->toArray();
+            }, $this->tools),
+            ...(isset($this->outputSchema) ? ['output_schema' => $this->outputSchema->mountBody()] : [])
+        ];
+    }
+
+    function executeChat(MessagesBag $messagesBag): self
+    {
+        $this->messagesBag = $messagesBag;
+        if (!isset($this->provider)) {
+            throw new \Exception('Provider not set. Use the using() method before executing the prompt.');
+        }
+        
+        $this->currentStep++;
+
+        $response = $this->chatProvider->executePrompt($this->mountOptions($messagesBag));
+        $this->processResponse($response);
+        return $this;
+    }
+
     /**
      * Sends current messages to the LLM and processes the response
      *
@@ -188,25 +225,28 @@ class TextWrapper
      * @return self
      * @throws \Exception If the provider is not set
      */
-    public function executeChat(MessagesBag $messagesBag): self
+    public function executeChatStream(MessagesBag $messagesBag): \Generator
     {
-        $this->messagesBag = $messagesBag;
-        if (!isset($this->provider)) {
-            throw new \Exception('Provider not set. Use the using() method before executing the prompt.');
+        if (isset($this->outputSchema)) {
+            throw new \Exception('Stream response is not supported with output schema.');
         }
-
-        $response = $this->chatProvider->executePrompt([
-            'messages' => $messagesBag->toArray(),
-            'tools' => array_map(function (FunctionHelper $tool) {
-                return $tool->toArray();
-            }, $this->tools),
-            ...(isset($this->outputSchema) ? ['output_schema' => $this->outputSchema->mountBody()] : [])
-        ]);
-
+        $this->messagesBag = $messagesBag;
         $this->currentStep++;
-        $this->processResponse($response);
-        
-        return $this;
+        $response = $this->chatProvider->executeStream($this->mountOptions($messagesBag));
+        foreach ($response as $responseItem) {
+            switch ($responseItem['type']) {
+                case 'text':
+                    yield new StreamResponse($responseItem['response'], [], []);
+                    break;
+                case 'tool':
+                    $result = $this->executeTool($responseItem['tools'], $responseItem['rawResponse'], true);
+                    yield new StreamResponse('',  [], $result['calledTools']);
+                    if ($this->currentStep < $this->maxSteps) {
+                        yield from $this->executeChatStream($this->messagesBag);
+                    }
+                    break;
+            }
+        }
     }
 
     /**
@@ -219,10 +259,17 @@ class TextWrapper
     {
         $this->lastResponse = $response;
 
-        if ($response['type'] === 'text') {
-            $this->messagesBag->add(Message::assistant($response['response']));
-        } else if ($response['type'] === 'tool') {
-            $this->executeTool($response['tools'], $response['rawResponse']);
+        switch ($response['type']) {
+            case 'text':
+                $this->messagesBag->add(Message::assistant($response['response']));
+                break;
+            case 'tool':
+                $result = $this->executeTool($response['tools'], $response['rawResponse']);
+                $this->calledTools = $result['calledTools'];
+                if ($this->currentStep < $this->maxSteps) {
+                    $this->executeChat($this->messagesBag);
+                }
+                break;
         }
     }
 
@@ -234,9 +281,10 @@ class TextWrapper
      * @return void
      * @throws \Exception If a requested tool is not found
      */
-    private function executeTool(array $tools, array $rawResponse): void
+    private function executeTool(array $tools, array $rawResponse): array
     {
         $this->messagesBag->add(Message::assistant(null, (array) $rawResponse)); 
+        $calledTools = [];
 
         foreach ($tools as &$toolResponse) {
             $filteredTools = array_filter($this->tools, function ($tool) use ($toolResponse) {
@@ -248,16 +296,16 @@ class TextWrapper
                 throw new \Exception('Failed to execute tool: ' . $toolResponse['name'] . ' (tool not found)');
             }
 
-            $response = $tool->execute($toolResponse['arguments']);
-            $this->messagesBag->add(Message::tool($response['response'], $toolResponse['id'])); 
+            $response = $tool->execute($toolResponse['arguments'] ?? []);
+            $this->messagesBag->add(Message::tool($response, $toolResponse['id'])); 
             $toolResponse['response'] = $response;
-            $this->calledTools[] = $toolResponse;
             $this->lastResponse['tools'] = $tools;
+            $calledTools[] = $toolResponse;
         }
-
-        if ($this->currentStep < $this->maxSteps) {
-            $this->executeChat($this->messagesBag);
-        }
+        return [
+            'success' => true,
+            'calledTools' => $calledTools
+        ];
     }
 
     /**
@@ -285,7 +333,7 @@ class TextWrapper
         }
 
         return new StructureResponse(
-            json_decode($this->lastResponse['response']),
+            json_decode($this->lastResponse['response'] ?? '{}'),
             $this->lastResponse['tools'] ?? [],
             $this->calledTools ?? []
         );
