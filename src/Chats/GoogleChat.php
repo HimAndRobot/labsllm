@@ -123,9 +123,15 @@ class GoogleChat extends BaseChat
 
     private function parseMessages(array $messages): array
     {      
+       
+
         return array_map(function ($message) {
             return [
-                'role' => $message['role'],
+                'role' => match ($message['role']) {
+                    'assistant' => 'model',
+                    'user' => 'user',
+                    default => $message['role']
+                },
                 'parts' => [
                     [
                         'text' => $message['content']

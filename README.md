@@ -50,10 +50,10 @@ Legend:
 |---------|--------|-----------|--------|
 | Text Prompts | ✅ | ✅ | 📅 |
 | System Instructions | ✅ | ✅ | 📅 |
-| Chat | ✅ | 🚧 | 📅 |
-| Tools/Functions | ✅ | 📅 | ❌ 
-| Structure Output | ✅ | 📅 | ❌ |
-| Streaming | ✅ | 📅 | ❌ |
+| Chat | ✅ | ✅ | 📅 |
+| Tools/Functions | ✅ | 🚧 | ❌ 
+| Structure Output | ✅ | 🚧 | ❌ |
+| Streaming | ✅ | 🚧 | ❌ |
 | Embeddings | 📅 | ❌ | ❌ |
 | Voice | 📅 | ❌ | ❌ |
 | Image Generation | 📅 | ❌ | 📅 | 
