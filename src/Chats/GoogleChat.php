@@ -76,6 +76,15 @@ class GoogleChat extends BaseChat
                         'text' => $options['systemMessage']
                     ]
                 ]
+            ]] : []),
+            ...(isset($options['tools']) ? ['tools' => [
+                'functionDeclarations' => array_map(function ($tool) {
+                    return [
+                        'name' => $tool['function']['name'],
+                        'description' => $tool['function']['description'],
+                        ...(isset($tool['function']['parameters']) ? ['parameters' => $tool['function']['parameters']] : [])
+                    ];
+                }, $options['tools'])
             ]] : [])
         ];
     }
@@ -88,16 +97,16 @@ class GoogleChat extends BaseChat
      */
     public function processResponse(object $response): array
     {
-        if ($response->candidates[0]['content']['parts'][0]['text']) {
+        if (isset($response->candidates[0]['content']['parts'][0]['text'])) {
             return [
                 'type' => 'text',
                 'response' => $response->candidates[0]['content']['parts'][0]['text']
             ];
-        } else if ($response->candidates[0]['tool_calls']) {
+        } else if ($response->candidates[0]['content']['parts'][0]['functionCall']) {
             return [
                 'type' => 'tool',
-                'rawResponse' => $response->candidates[0]->tool_calls,
-                'tools' => $this->processToolForResponse($response->choices[0]->message->toolCalls)
+                'rawResponse' => $response->candidates[0]['content']['parts'],
+                'tools' => $this->processToolForResponse($response->candidates[0]['content']['parts'])
             ];
         }
 
@@ -114,32 +123,68 @@ class GoogleChat extends BaseChat
     {
         return array_map(function ($tool) {
                 return [
-                    'id' => $tool->id,
-                    'name' => $tool->function->name,
-                    'arguments' => json_decode($tool->function->arguments, true)
+                    'id' => 'no-id',
+                    'name' => $tool['functionCall']['name'],
+                    'arguments' => $tool['functionCall']['args']
             ];
         }, $tools);
     }
 
+    /**
+     * Parse the messages for the request
+     *
+     * @param array $messages
+     * @return array
+     */
     private function parseMessages(array $messages): array
-    {      
-       
-
+    {
         return array_map(function ($message) {
             return [
                 'role' => match ($message['role']) {
                     'assistant' => 'model',
-                    'user' => 'user',
-                    default => $message['role']
+                    'user'      => 'user', 
+                    'tool'      => 'user',
+                    default     => $message['role']
                 },
-                'parts' => [
-                    [
-                        'text' => $message['content']
-                    ]
-                ]
+                'parts' => match ($message['role']) {
+                    'tool' => [
+                        [
+                            'functionResponse' => [
+                                'name'     => $message['tool_name'],
+                                'response' => [
+                                    'result' => $message['content'] 
+                                ]
+                            ]
+                        ]
+                    ],
+                    default => call_user_func(function () use ($message): array {
+                        if (isset($message['content'])) {
+                            return [
+                                [
+                                    'text' => $message['content']
+                                ]
+                            ];
+                        }
+
+                        if (!empty($message['tool_calls']) && is_array($message['tool_calls'])) {
+                            return array_map(function ($toolCall) {
+                                $functionCallData = [
+                                    'name' => $toolCall['functionCall']['name']
+                                ];
+                                if (!empty($toolCall['functionCall']['args'])) {
+                                    $functionCallData['args'] = $toolCall['functionCall']['args'];
+                                }
+                                return ['functionCall' => $functionCallData];
+                            }, $message['tool_calls']);
+                        }
+
+                        return [];
+                    })
+                }
             ];
         }, $messages);
     }
+
 
     /**
      * Execute a request to Gemini API
@@ -155,7 +200,6 @@ class GoogleChat extends BaseChat
         $response = $client->post("https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key=" . $this->apiKey, [
             'json' => $parameters
         ]);
-
         return json_decode($response->getBody()->getContents(), true);
     }
 } 
