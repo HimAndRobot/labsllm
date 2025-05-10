@@ -301,7 +301,8 @@ class TextWrapper
             }
 
             $response = $tool->execute($toolResponse['arguments'] ?? []);
-            $this->messagesBag->add(Message::tool($response, $toolResponse['id'])); 
+            $this->messagesBag->add(Message::tool($response, $toolResponse['id'], $toolResponse['name'])); 
+
             $toolResponse['response'] = $response;
             $this->lastResponse['tools'] = $tools;
             $calledTools[] = $toolResponse;
