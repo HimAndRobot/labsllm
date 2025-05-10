@@ -70,6 +70,15 @@ class OpenAIChat extends BaseChat
      */
     private function parseBodyFormPrompt(array $options): array
     {
+        if (isset($options['systemMessage'])) {
+            $options['messages'] = array_merge([
+                [
+                    'role' => 'system',
+                    'content' => $options['systemMessage']
+                ]
+            ], $options['messages']);
+        }
+        
         return [
             'model' => $this->model,
             'messages' => $options['messages'] ?? [],

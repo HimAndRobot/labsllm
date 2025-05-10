@@ -17,7 +17,8 @@ class Message
         protected string $role,
         protected string|null $content,
         protected array|null $toolCalls = null,
-        protected string|null $toolCallId = null
+        protected string|null $toolCallId = null,
+        protected string|null $toolName = null
     ) {}
     
     /**
@@ -51,7 +52,8 @@ class Message
             'role' => $this->role,
             'content' => $this->content,
             ...($this->toolCalls ? ['tool_calls' => $this->toolCalls] : []),
-            ...($this->toolCallId ? ['tool_call_id' => $this->toolCallId] : [])
+            ...($this->toolCallId ? ['tool_call_id' => $this->toolCallId] : []),
+            ...($this->toolName ? ['tool_name' => $this->toolName] : [])
         ];
     }
     
@@ -88,9 +90,9 @@ class Message
         return new self('system', $content);
     }
 
-    public static function tool(string $content, string $id): self
+    public static function tool(string $content, string $id, string $name): self
     {
-        return new self('tool', $content, null, $id);
+        return new self('tool', $content, null, $id, $name);
     }
     
     /**

@@ -2,6 +2,7 @@
 
 namespace LabsLLM;
 
+use LabsLLM\Chats\GoogleChat;
 use LabsLLM\Chats\OpenAIChat;
 use LabsLLM\Messages\Message;
 use LabsLLM\Messages\MessagesBag;
@@ -87,9 +88,13 @@ class TextWrapper
     public function using(ProviderInterface $provider): self
     {
         $this->provider = $provider;
+
         switch ($provider->getName()) {
             case 'openai':
                 $this->chatProvider = new OpenAIChat($provider);
+                break;
+            case 'google':
+                $this->chatProvider = new GoogleChat($provider);
                 break;
             default:
                 throw new \Exception('Unsupported provider: ' . $provider->getName());
@@ -170,7 +175,6 @@ class TextWrapper
         }
 
         $messagesBag = MessagesBag::create([
-            ...(isset($this->systemMessage) ? [Message::system($this->systemMessage)] : []),
             Message::user($prompt)
         ]);
         
@@ -185,7 +189,6 @@ class TextWrapper
     public function executePromptStream(string $prompt): \Generator
     {
         $messagesBag = MessagesBag::create([
-            ...(isset($this->systemMessage) ? [Message::system($this->systemMessage)] : []),
             Message::user($prompt)
         ]);
         
@@ -196,6 +199,7 @@ class TextWrapper
     private function mountOptions(MessagesBag $messagesBag): array
     {
         return [
+            'systemMessage' => $this->systemMessage ?? null,
             'messages' => $messagesBag->toArray(),
             'tools' => array_map(function (FunctionHelper $tool) {
                 return $tool->toArray();
@@ -227,9 +231,6 @@ class TextWrapper
      */
     public function executeChatStream(MessagesBag $messagesBag): \Generator
     {
-        if (isset($this->outputSchema)) {
-            throw new \Exception('Stream response is not supported with output schema.');
-        }
         $this->messagesBag = $messagesBag;
         $this->currentStep++;
         $response = $this->chatProvider->executeStream($this->mountOptions($messagesBag));
@@ -297,7 +298,8 @@ class TextWrapper
             }
 
             $response = $tool->execute($toolResponse['arguments'] ?? []);
-            $this->messagesBag->add(Message::tool($response, $toolResponse['id'])); 
+            $this->messagesBag->add(Message::tool($response, $toolResponse['id'], $toolResponse['name'])); 
+
             $toolResponse['response'] = $response;
             $this->lastResponse['tools'] = $tools;
             $calledTools[] = $toolResponse;

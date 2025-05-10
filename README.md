@@ -48,12 +48,12 @@ Legend:
 
 | Feature | OpenAI | Google | Anthropic |
 |---------|--------|-----------|--------|
-| Text Prompts | ✅ | 🚧 | 📅 |
-| System Instructions | ✅ | 🚧 | 📅 |
-| Chat | ✅ | 🚧 | 📅 |
-| Tools/Functions | ✅ | 📅 | ❌ 
-| Structure Output | ✅ | 📅 | ❌ |
-| Streaming | ✅ | 📅 | ❌ |
+| Text Prompts | ✅ | ✅ | 📅 |
+| System Instructions | ✅ | ✅ | 📅 |
+| Chat | ✅ | ✅ | 📅 |
+| Tools/Functions | ✅ | ✅ | ❌ 
+| Structure Output | ✅ | ✅ | ❌ |
+| Streaming | ✅ | ✅ | ❌ |
 | Embeddings | 📅 | ❌ | ❌ |
 | Voice | 📅 | ❌ | ❌ |
 | Image Generation | 📅 | ❌ | 📅 | 
