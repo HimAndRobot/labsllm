@@ -231,9 +231,6 @@ class TextWrapper
      */
     public function executeChatStream(MessagesBag $messagesBag): \Generator
     {
-        if (isset($this->outputSchema)) {
-            throw new \Exception('Stream response is not supported with output schema.');
-        }
         $this->messagesBag = $messagesBag;
         $this->currentStep++;
         $response = $this->chatProvider->executeStream($this->mountOptions($messagesBag));
