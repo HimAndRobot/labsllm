@@ -51,8 +51,8 @@ Legend:
 | Text Prompts | ✅ | ✅ | 📅 |
 | System Instructions | ✅ | ✅ | 📅 |
 | Chat | ✅ | ✅ | 📅 |
-| Tools/Functions | ✅ | 🚧 | ❌ 
-| Structure Output | ✅ | 🚧 | ❌ |
+| Tools/Functions | ✅ | ✅ | ❌ 
+| Structure Output | ✅ | ✅ | ❌ |
 | Streaming | ✅ | 🚧 | ❌ |
 | Embeddings | 📅 | ❌ | ❌ |
 | Voice | 📅 | ❌ | ❌ |
