@@ -53,7 +53,7 @@ Legend:
 | Chat | ✅ | ✅ | 📅 |
 | Tools/Functions | ✅ | ✅ | ❌ 
 | Structure Output | ✅ | ✅ | ❌ |
-| Streaming | ✅ | 🚧 | ❌ |
+| Streaming | ✅ | ✅ | ❌ |
 | Embeddings | 📅 | ❌ | ❌ |
 | Voice | 📅 | ❌ | ❌ |
 | Image Generation | 📅 | ❌ | 📅 | 
