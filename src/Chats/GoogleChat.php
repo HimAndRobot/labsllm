@@ -3,6 +3,9 @@
 namespace LabsLLM\Chats;
 
 use OpenAI;
+use LabsLLM\Parameters\ArrayParameter;
+use LabsLLM\Parameters\ObjectParameter;
+use LabsLLM\Parameters\StringParameter;
 
 /**
  * Chat for the Google provider
@@ -68,6 +71,11 @@ class GoogleChat extends BaseChat
      */
     private function parseBodyFormPrompt(array $options): array
     {
+
+        if(isset($options['output_schema']) && count($options['output_schema']) > 0 && count($options['tools']) > 0) {
+            throw new \Exception('Output schema and tools cannot be used together in google provider, is a limitation of the provider');
+        }
+
         return [
             'contents' => $this->parseMessages($options['messages'] ?? []),
             ...(isset($options['systemMessage']) ? ['system_instruction' => [
@@ -77,7 +85,7 @@ class GoogleChat extends BaseChat
                     ]
                 ]
             ]] : []),
-            ...(isset($options['tools']) ? ['tools' => [
+            ...(isset($options['tools']) && count($options['tools']) > 0 ? ['tools' => [
                 'functionDeclarations' => array_map(function ($tool) {
                     return [
                         'name' => $tool['function']['name'],
@@ -85,6 +93,10 @@ class GoogleChat extends BaseChat
                         ...(isset($tool['function']['parameters']) ? ['parameters' => $tool['function']['parameters']] : [])
                     ];
                 }, $options['tools'])
+            ]] : []),
+            ...(isset($options['output_schema']) ? ['generationConfig' =>[
+                'responseMimeType' => 'application/json',
+                'responseSchema' => $options['output_schema']
             ]] : [])
         ];
     }
@@ -196,6 +208,7 @@ class GoogleChat extends BaseChat
     public function executeGeminiRequest(array $parameters): array
     {
         $client = new \GuzzleHttp\Client();
+
 
         $response = $client->post("https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent?key=" . $this->apiKey, [
             'json' => $parameters

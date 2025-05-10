@@ -21,7 +21,7 @@ class Google implements ProviderInterface
      * @param string $model
      * @param float $temperature
      */
-    public function __construct(string $apiKey, string $model = 'gemini-2.0-flash', float $temperature = 0.7)
+    public function __construct(string $apiKey, string $model = 'gemini-2.0-flash-lite', float $temperature = 0.7)
     {
         if ($apiKey === null) {
             throw new \InvalidArgumentException('API key is required');
