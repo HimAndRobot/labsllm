@@ -21,8 +21,8 @@ class StreamResponse extends BaseResponse
         $this->calledTools = $calledTools;
     }
 
-    public function isCalledFunction(string $functionName): bool
+    public function isCalledTool(string $toolName): bool
     {
-        return in_array($functionName, array_column($this->calledTools, 'name'));
+        return in_array($toolName, array_column($this->calledTools, 'name'));
     }
 }
