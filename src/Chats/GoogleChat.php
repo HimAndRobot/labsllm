@@ -2,11 +2,6 @@
 
 namespace LabsLLM\Chats;
 
-use OpenAI;
-use LabsLLM\Parameters\ArrayParameter;
-use LabsLLM\Parameters\ObjectParameter;
-use LabsLLM\Parameters\StringParameter;
-
 /**
  * Chat for the Google provider
  */
@@ -25,31 +20,28 @@ class GoogleChat extends BaseChat
 
     public function executeStream(array $options = []): \Generator | array
     {
-        $client = OpenAI::client($this->apiKey);
-
-        $stream = $client->chat()->createStreamed(parameters: $this->parseBodyFormPrompt($options));
+        $stream = $this->executeGeminiRequestStream($this->parseBodyFormPrompt($options));
         $toolsCalled = [];
         foreach ($stream as $response) {
-            if (isset($response->choices[0]->delta->content)) {
+            if (isset($response['candidates'][0]['content']['parts'][0]['text'])) {
                 yield [
                     'type' => 'text',
-                    'response' => $response->choices[0]->delta->content
+                    'response' => $response['candidates'][0]['content']['parts'][0]['text']
                 ];
-            } elseif (isset($response->choices[0]->delta->toolCalls)) {
-                if (isset($response->choices[0]->delta->toolCalls[0]) && isset($response->choices[0]->delta->toolCalls[0]->id)) {
-                    $tool = (object) [
-                        'id' => $response->choices[0]->delta->toolCalls[0]->id,
-                        'type' => $response->choices[0]->delta->toolCalls[0]->type,
-                        'function' => (object) [
-                            'name' => $response->choices[0]->delta->toolCalls[0]->function->name,
-                            'arguments' => $response->choices[0]->delta->toolCalls[0]->function->arguments
-                        ]
-                    ];
-                    $toolsCalled[] = $tool;
-                } else if (isset($response->choices[0]->delta->toolCalls[0])) {
-                    $lastTool = array_pop($toolsCalled);
-                    $lastTool->function->arguments .= $response->choices[0]->delta->toolCalls[0]->function->arguments;
-                    $toolsCalled[] = $lastTool;
+            } 
+            elseif (isset($response['candidates'][0]['content']['parts'][0]['functionCall'])) {
+                foreach($response['candidates'][0]['content']['parts'] as $part) {
+                    if(isset($part['functionCall'])) {
+                        $functionCall = $part['functionCall'];
+                        $tool = [
+                            'id' => 'no-id',
+                            'functionCall' => [
+                                'name' => $functionCall['name'],
+                                'args' => $functionCall['args']
+                            ]
+                        ];
+                        $toolsCalled[] = $tool;
+                    }
                 }
             }
         }
@@ -214,5 +206,47 @@ class GoogleChat extends BaseChat
             'json' => $parameters
         ]);
         return json_decode($response->getBody()->getContents(), true);
+    }
+
+    /**
+     * Execute a request to Gemini API stream
+     *
+     * @param array $parameters
+     * @return \Generator
+     */
+    public function executeGeminiRequestStream(array $parameters): \Generator
+    {
+        $client = new \GuzzleHttp\Client();
+
+        try {
+            $response = $client->post(
+                "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:streamGenerateContent?key=" . $this->apiKey,
+                [
+                    'json'    => $parameters,
+                    'stream'  => true
+                ]
+            );
+
+            $body = $response->getBody();
+            $count = 0;
+            $buffer = '';
+            while (!$body->eof()) {
+                $chunk = $body->read(1024);
+                $buffer .= trim($chunk);
+                
+                $pattern = '/"candidates".*?"modelVersion"/s';
+                if(preg_match_all($pattern, $buffer, $matches, PREG_OFFSET_CAPTURE)) {
+                    foreach($matches[0] as $match) {
+                        $jsonString = '{' . substr($match[0], 0, -18) . "}";
+                        $responseChunk = json_decode($jsonString, true);
+                        $buffer = substr($buffer, $match[1] + 1);
+                        yield $responseChunk;
+                    }
+                }
+                $count++;
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
     }
 } 
