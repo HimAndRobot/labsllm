@@ -231,13 +231,15 @@ class TextWrapper
      */
     public function executeChatStream(MessagesBag $messagesBag): \Generator
     {
+        $acumulatedResponse = '';
         $this->messagesBag = $messagesBag;
         $this->currentStep++;
         $response = $this->chatProvider->executeStream($this->mountOptions($messagesBag));
         foreach ($response as $responseItem) {
             switch ($responseItem['type']) {
                 case 'text':
-                    yield new StreamResponse($responseItem['response'], [], []);
+                    $acumulatedResponse .= $responseItem['response'];
+                    yield new StreamResponse($acumulatedResponse, [], []);
                     break;
                 case 'tool':
                     $result = $this->executeTool($responseItem['tools'], $responseItem['rawResponse'], true);
@@ -248,6 +250,11 @@ class TextWrapper
                     break;
             }
         }
+
+        if ($acumulatedResponse) {
+            $this->messagesBag->add(Message::assistant($acumulatedResponse));
+        }
+        yield new StreamResponse('', [], [], $messagesBag);
     }
 
     /**
