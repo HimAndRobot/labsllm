@@ -239,7 +239,7 @@ class TextWrapper
             switch ($responseItem['type']) {
                 case 'text':
                     $acumulatedResponse .= $responseItem['response'];
-                    yield new StreamResponse($acumulatedResponse, [], []);
+                    yield new StreamResponse($responseItem['response'], [], []);
                     break;
                 case 'tool':
                     $result = $this->executeTool($responseItem['tools'], $responseItem['rawResponse'], true);
