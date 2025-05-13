@@ -73,7 +73,7 @@ class MessagesBag
                 break;
             }
         }
-        $this->messages = $newMessages;
+        $this->messages = $order === 'desc' ? array_reverse($newMessages) : $newMessages;
         return $this;
     }
 
