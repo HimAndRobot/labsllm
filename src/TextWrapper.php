@@ -128,12 +128,16 @@ class TextWrapper
     /**
      * Adds a tool that can be called by the LLM
      *
-     * @param FunctionHelper $tool Tool definition
+     * @param FunctionHelper | array<FunctionHelper> $tool Tool definition
      * @return self
      */
-    public function addTool(FunctionHelper $tool): self
+    public function addTool(FunctionHelper | array $tool): self
     {
-        $this->tools[] = $tool;
+        if (is_array($tool)) {
+            $this->tools = array_merge($this->tools, $tool);
+        } else {
+            $this->tools[] = $tool;
+        }
         return $this;
     }
 
