@@ -78,6 +78,23 @@ class MessagesBag
     }
 
     /**
+     * @return self
+     */
+    public function removeTools(): self
+    {
+        $newMessages = [];
+
+        foreach ($this->messages as $message) {
+            if ($message['role'] !== 'tool' && !isset($message['tool_calls'])) {
+                    $newMessages[] = $message; 
+            }
+        }
+
+        $this->messages = $newMessages;
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function toArray(): array
