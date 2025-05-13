@@ -124,4 +124,12 @@ class FunctionHelper
     {
         return $this->name;
     }
+
+    /**
+     * @return string
+     */
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
 }

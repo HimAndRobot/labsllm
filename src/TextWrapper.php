@@ -246,7 +246,7 @@ class TextWrapper
                     yield new StreamResponse($responseItem['response'], [], []);
                     break;
                 case 'tool':
-                    $result = $this->executeTool($responseItem['tools'], $responseItem['rawResponse'], true);
+                    $result = $this->executeTool($responseItem['tools'], $responseItem['rawResponse']);
                     yield new StreamResponse('',  [], $result['calledTools']);
                     if ($this->currentStep < $this->maxSteps) {
                         yield from $this->executeChatStream($this->messagesBag);
@@ -309,7 +309,16 @@ class TextWrapper
             }
 
             $response = $tool->execute($toolResponse['arguments'] ?? []);
-            $this->messagesBag->add(Message::tool($response, $toolResponse['id'], $toolResponse['name'])); 
+            $this->messagesBag->add(
+                Message::tool(
+                    $response,
+                    $toolResponse['id'],
+                    $toolResponse['name'],
+                    $tool->getDescription(),
+                    $toolResponse['arguments'] ?? [],
+                    $response
+                )
+            ); 
 
             $toolResponse['response'] = $response;
             $this->lastResponse['tools'] = $tools;

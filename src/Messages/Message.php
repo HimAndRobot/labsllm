@@ -18,7 +18,10 @@ class Message
         protected string|null $content,
         protected array|null $toolCalls = null,
         protected string|null $toolCallId = null,
-        protected string|null $toolName = null
+        protected string|null $toolName = null,
+        protected string|null $toolDescription = null,
+        protected array|string|null $toolArguments = null,
+        protected array|string|null $toolResponse = null
     ) {}
     
     /**
@@ -53,7 +56,10 @@ class Message
             'content' => $this->content,
             ...($this->toolCalls ? ['tool_calls' => $this->toolCalls] : []),
             ...($this->toolCallId ? ['tool_call_id' => $this->toolCallId] : []),
-            ...($this->toolName ? ['tool_name' => $this->toolName] : [])
+            ...($this->toolName ? ['tool_name' => $this->toolName] : []),
+            ...($this->toolDescription ? ['tool_description' => $this->toolDescription] : []),
+            ...($this->toolArguments ? ['tool_arguments' => $this->toolArguments] : []),
+            ...($this->toolResponse ? ['tool_response' => $this->toolResponse] : [])
         ];
     }
     
@@ -90,9 +96,26 @@ class Message
         return new self('system', $content);
     }
 
-    public static function tool(string $content, string $id, string $name): self
+    /**
+     * Creates a tool message
+     *
+     * @param string $content
+     * @param string $id
+     * @param string $name
+     * @param string $description
+     * @param array|string $arguments
+     * @param array|string $response
+     * @return \LabsLLM\Messages\Message
+     */
+    public static function tool(string $content, string $id, string $name, string $description, array $arguments, string|null $response): self
     {
-        return new self('tool', $content, null, $id, $name);
+        if (is_array($arguments)) {
+            $arguments = json_encode($arguments);
+        }
+        if (is_array($response)) {
+            $response = json_encode($response);
+        }
+        return new self('tool', $content, null, $id, $name, $description, $arguments, $response);
     }
     
     /**
