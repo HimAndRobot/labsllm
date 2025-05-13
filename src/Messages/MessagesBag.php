@@ -52,7 +52,8 @@ class MessagesBag
      */
     public function asJson(): string
     {
-        return json_encode($this->messages);
+        $messagesWithoutSystem = array_filter($this->messages, fn($msg) => $msg['role'] !== 'system');
+        return json_encode($messagesWithoutSystem);
     }
 
     /**

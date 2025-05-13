@@ -70,18 +70,29 @@ class OpenAIChat extends BaseChat
      */
     private function parseBodyFormPrompt(array $options): array
     {
-        if (isset($options['systemMessage'])) {
-            $options['messages'] = array_merge([
-                [
-                    'role' => 'system',
-                    'content' => $options['systemMessage']
-                ]
-            ], $options['messages']);
-        }
+        $messages = $options['messages'] ?? [];
         
+        if (isset($options['systemMessage'])) {
+            $messages = array_filter($messages, fn($msg) => $msg['role'] !== 'system');
+            $systemMessage = ['role' => 'system', 'content' => $options['systemMessage']];
+            
+            $lastUserIndex = -1;
+            foreach (array_keys($messages) as $index) {
+                if ($messages[$index]['role'] === 'user') {
+                    $lastUserIndex = $index;
+                }
+            }
+
+            if ($lastUserIndex !== -1) {
+                array_splice($messages, $lastUserIndex, 0, [$systemMessage]);
+            } else {
+                $messages[] = $systemMessage;
+            }
+        }
+
         return [
             'model' => $this->model,
-            'messages' => $options['messages'] ?? [],
+            'messages' => $messages,
             ...($options['tools'] ? ['tools' => $options['tools']] : []),
             ...(isset($options['output_schema']) ? ['response_format' => [
                 'type' => 'json_schema',
