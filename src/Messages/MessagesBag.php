@@ -57,6 +57,27 @@ class MessagesBag
     }
 
     /**
+     * @return self
+     */
+    public function limit(int $limit, string $order = 'desc'): self
+    {
+        $newMessages = [];
+        foreach (($order === 'desc' ? array_reverse($this->messages) : $this->messages) as $message) {
+            $newMessages[] = $message;
+
+            if ($order === 'asc' && !isset($message['tool_calls']) || $order === 'desc' && $message['role'] !== 'tool') {
+                $limit--;
+            }
+
+            if ($limit === 0) {
+                break;
+            }
+        }
+        $this->messages = $newMessages;
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function toArray(): array
