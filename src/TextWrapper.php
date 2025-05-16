@@ -243,11 +243,11 @@ class TextWrapper
             switch ($responseItem['type']) {
                 case 'text':
                     $acumulatedResponse .= $responseItem['response'];
-                    yield new StreamResponse($responseItem['response'], [], []);
+                    yield new StreamResponse($responseItem['response'],$acumulatedResponse, [], [], $messagesBag);
                     break;
                 case 'tool':
                     $result = $this->executeTool($responseItem['tools'], $responseItem['rawResponse']);
-                    yield new StreamResponse('',  [], $result['calledTools']);
+                    yield new StreamResponse('', '', $result['calledTools'], [], $messagesBag);
                     if ($this->currentStep < $this->maxSteps) {
                         yield from $this->executeChatStream($this->messagesBag);
                     }
@@ -258,7 +258,7 @@ class TextWrapper
         if ($acumulatedResponse) {
             $this->messagesBag->add(Message::assistant($acumulatedResponse));
         }
-        yield new StreamResponse('', [], [], $messagesBag);
+        yield new StreamResponse('', $acumulatedResponse, [], [], $messagesBag);
     }
 
     /**

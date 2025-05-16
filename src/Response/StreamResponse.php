@@ -12,6 +12,11 @@ class StreamResponse extends BaseResponse
     public $response;
 
     /**
+     * @var string
+     */
+    public $responseRaw;
+
+    /**
      * @var \LabsLLM\Messages\MessagesBag | null
      */
     public $messagesBag;
@@ -24,9 +29,10 @@ class StreamResponse extends BaseResponse
      * @param array $calledTools
      * @param \LabsLLM\Messages\MessagesBag | null $messagesBag
      */
-    public function __construct(string $response, array $functionCalls, array $calledTools, MessagesBag | null $messagesBag = null)
+    public function __construct(string $response, string $responseRaw, array $functionCalls, array $calledTools, MessagesBag | null $messagesBag = null)
     {
         $this->response = $response;
+        $this->responseRaw = $responseRaw;
         $this->functionCalls = $functionCalls;
         $this->calledTools = $calledTools;
         $this->messagesBag = $messagesBag;
