@@ -45,6 +45,7 @@ class ObjectScope extends Scope {
     private $state = 'key';
     private $keyScope = null;
     private $valueScope = null;
+    private $currentKey = null;
     
     public function write($char) {
         if ($this->finished) {
@@ -71,16 +72,15 @@ class ObjectScope extends Scope {
                 }
             } else {
                 $success = $this->keyScope->write($char);
-                $key = $this->keyScope->getOrAssume();
                 
-                if (is_string($key)) {
+                if ($success) {
                     if ($this->keyScope->isFinished()) {
                         $this->state = 'colon';
+                        $this->currentKey = $this->keyScope->getOrAssume();
                     }
                     return true;
-                } else {
-                    return false;
                 }
+                return false;
             }
         } else if ($this->state === 'colon') {
             if ($this->isWhitespace($char)) {
@@ -109,26 +109,23 @@ class ObjectScope extends Scope {
             } else {
                 $success = $this->valueScope->write($char);
                 
-                if ($this->valueScope->isFinished()) {
-                    $key = $this->keyScope->getOrAssume();
-                    $this->object[$key] = $this->valueScope->getOrAssume();
-                    $this->state = 'comma';
-                    return true;
-                } else if ($success) {
+                if ($success) {
+                    if ($this->valueScope->isFinished()) {
+                        $this->object[$this->currentKey] = $this->valueScope->getOrAssume();
+                        $this->state = 'comma';
+                    }
                     return true;
                 } else {
                     if ($this->isWhitespace($char)) {
                         return true;
                     } else if ($char === ',') {
-                        $key = $this->keyScope->getOrAssume();
-                        $this->object[$key] = $this->valueScope->getOrAssume();
+                        $this->object[$this->currentKey] = $this->valueScope->getOrAssume();
                         $this->state = 'key';
                         $this->keyScope = null;
                         $this->valueScope = null;
                         return true;
                     } else if ($char === '}') {
-                        $key = $this->keyScope->getOrAssume();
-                        $this->object[$key] = $this->valueScope->getOrAssume();
+                        $this->object[$this->currentKey] = $this->valueScope->getOrAssume();
                         $this->finished = true;
                         return true;
                     } else {
@@ -159,15 +156,8 @@ class ObjectScope extends Scope {
         $assume = $this->object;
         
         if ($this->keyScope !== null || $this->valueScope !== null) {
-            $key = $this->keyScope ? $this->keyScope->getOrAssume() : null;
-            $value = $this->valueScope ? $this->valueScope->getOrAssume() : null;
-            
-            if (is_string($key) && !empty($key)) {
-                if ($value !== null) {
-                    $assume[$key] = $value;
-                } else {
-                    $assume[$key] = null;
-                }
+            if ($this->currentKey && $this->valueScope) {
+                $assume[$this->currentKey] = $this->valueScope->getOrAssume();
             }
         }
         
@@ -179,88 +169,118 @@ class ObjectScope extends Scope {
  * Scope for JSON arrays
  */
 class ArrayScope extends Scope {
-    private $array = [];
-    private $state = 'value';
-    private $currentScope = null;
+    private $buffer = '';
+    private $items = [];
+    private $inString = false;
+    private $escaped = false;
+    private $depth = 0;
+    private $objectDepth = 0;
+    private $arrayDepth = 0;
+    private $currentItem = '';
     
     public function write($char) {
         if ($this->finished) {
             return false;
         }
         
-        if (empty($this->array) && $this->state === 'value' && $this->currentScope === null) {
-            if ($char === '[') return true;
+        $this->buffer .= $char;
+        
+        // Handle first character
+        if (strlen($this->buffer) === 1 && $char === '[') {
+            return true;
         }
         
-        if ($this->state === 'value') {
-            if ($this->currentScope === null) {
-                if ($this->isWhitespace($char)) {
-                    return true;
-                } else if ($char === ']') {
-                    $this->finished = true;
-                    return true;
-                } else if ($char === '{') {
-                    $this->currentScope = new ObjectScope();
-                    $this->array[] = $this->currentScope;
-                    return $this->currentScope->write($char);
-                } else if ($char === '[') {
-                    $this->currentScope = new ArrayScope();
-                    $this->array[] = $this->currentScope;
-                    return $this->currentScope->write($char);
-                } else {
-                    $this->currentScope = new LiteralScope();
-                    $this->array[] = $this->currentScope;
-                    return $this->currentScope->write($char);
-                }
-            } else {
-                $success = $this->currentScope->write($char);
-                
-                if ($success) {
-                    if ($this->currentScope->isFinished()) {
-                        $this->state = 'comma';
-                    }
-                    return true;
-                } else {
-                    if ($this->isWhitespace($char)) {
-                        return true;
-                    } else if ($char === ',') {
-                        $this->state = 'value';
-                        $this->currentScope = null;
-                        return true;
-                    } else if ($char === ']') {
-                        $this->finished = true;
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
+        // Handle string contents
+        if ($this->inString) {
+            if ($char === '\\') {
+                $this->escaped = !$this->escaped;
+                return true;
             }
-        } else if ($this->state === 'comma') {
-            if ($this->isWhitespace($char)) {
-                return true;
-            } else if ($char === ',') {
-                $this->state = 'value';
-                $this->currentScope = null;
-                return true;
-            } else if ($char === ']') {
+            
+            if ($char === '"' && !$this->escaped) {
+                $this->inString = false;
+            } else {
+                $this->escaped = false;
+            }
+            
+            $this->currentItem .= $char;
+            return true;
+        }
+        
+        // Handle string start
+        if ($char === '"') {
+            $this->inString = true;
+            $this->currentItem .= $char;
+            return true;
+        }
+        
+        // Handle object depth
+        if ($char === '{') {
+            $this->objectDepth++;
+            $this->depth++;
+            $this->currentItem .= $char;
+            return true;
+        }
+        
+        if ($char === '}') {
+            $this->objectDepth--;
+            $this->depth--;
+            $this->currentItem .= $char;
+            return true;
+        }
+        
+        // Handle array depth
+        if ($char === '[') {
+            $this->arrayDepth++;
+            $this->depth++;
+            $this->currentItem .= $char;
+            return true;
+        }
+        
+        if ($char === ']') {
+            if ($this->depth === 0) {
+                // End of the main array
+                $this->addItemIfNotEmpty();
                 $this->finished = true;
                 return true;
-            } else {
-                return false;
             }
+            
+            $this->arrayDepth--;
+            $this->depth--;
+            $this->currentItem .= $char;
+            return true;
         }
         
-        return false;
+        // Handle item separators
+        if ($char === ',' && $this->depth === 0) {
+            $this->addItemIfNotEmpty();
+            $this->currentItem = '';
+            return true;
+        }
+        
+        // Other characters just add to current item
+        if (!$this->isWhitespace($char) || $this->depth > 0 || $this->currentItem !== '') {
+            $this->currentItem .= $char;
+        }
+        
+        return true;
+    }
+    
+    private function addItemIfNotEmpty() {
+        $trimmed = trim($this->currentItem);
+        if ($trimmed !== '') {
+            // Try to parse the item
+            $parser = new IncompleteJsonParser();
+            $parsed = $parser->parse($trimmed);
+            $this->items[] = $parsed;
+        }
     }
     
     public function getOrAssume() {
-        $result = [];
+        // Process any remaining items
+        $this->addItemIfNotEmpty();
         
-        foreach ($this->array as $scope) {
-            $result[] = $scope->getOrAssume();
-        }
-        
-        return $result;
+        return $this->items;
     }
 }
 
@@ -274,6 +294,12 @@ class LiteralScope extends Scope {
     
     public function write($char) {
         if ($this->finished) {
+            return false;
+        }
+        
+        // Don't append comma to numeric values
+        if ($char === ',' && !$this->inString && is_numeric($this->content)) {
+            $this->finished = true;
             return false;
         }
         
@@ -340,6 +366,15 @@ class LiteralScope extends Scope {
                 return (float)$this->content;
             } else {
                 return (int)$this->content;
+            }
+        }
+        
+        // Handle potential numeric values with trailing characters
+        if (preg_match('/^(-?\d+(\.\d*)?)[^0-9\.].*/s', $this->content, $matches)) {
+            if (strpos($matches[1], '.') !== false) {
+                return (float)$matches[1];
+            } else {
+                return (int)$matches[1];
             }
         }
         

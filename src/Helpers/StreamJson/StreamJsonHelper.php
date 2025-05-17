@@ -19,12 +19,14 @@ class StreamJsonHelper {
             return [];
         }
         
-        $decoded = json_decode($partialJson, true);
+        $decoded = json_decode($partialJson);
         if (json_last_error() === JSON_ERROR_NONE) {
             return $decoded;
         }
         
         $parser = new IncompleteJsonParser();
-        return $parser->parse($partialJson);
+        $array = $parser->parse($partialJson);
+        $objeto = json_decode(json_encode($array), false);
+        return $objeto;
     }
 } 
