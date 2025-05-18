@@ -2,7 +2,10 @@
 
 namespace LabsLLM\Helpers\StreamJson;
 
-require_once __DIR__ . '/Scopes.php';
+use LabsLLM\Helpers\StreamJson\Scopes\Scope;
+use LabsLLM\Helpers\StreamJson\Scopes\ObjectScope;
+use LabsLLM\Helpers\StreamJson\Scopes\ArrayScope;
+use LabsLLM\Helpers\StreamJson\Scopes\LiteralScope;
 
 /**
  * Parser for incomplete JSON
@@ -17,29 +20,30 @@ class IncompleteJsonParser {
     public function parse($chunk) {
         $this->reset();
         
-        for ($i = 0; $i < strlen($chunk); $i++) {
-            $char = $chunk[$i];
-            
-            if ($this->finished) {
-                if ($this->isWhitespace($char)) continue;
-                break;
-            }
+        // First try standard JSON decode
+        $decoded = json_decode($chunk, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $decoded;
+        }
+        
+        // Try to repair and parse the incomplete JSON
+        $trimmed = trim($chunk);
+        
+        if (empty($trimmed)) {
+            return null;
+        }
+        
+        for ($i = 0; $i < strlen($trimmed); $i++) {
+            $char = $trimmed[$i];
             
             if ($this->scope === null) {
                 if ($this->isWhitespace($char)) continue;
                 else if ($char === '{') $this->scope = new ObjectScope();
                 else if ($char === '[') $this->scope = new ArrayScope();
                 else $this->scope = new LiteralScope();
-                $this->scope->write($char);
-            } else {
-                $success = $this->scope->write($char);
-                if ($success) {
-                    if ($this->scope->isFinished()) {
-                        $this->finished = true;
-                        continue;
-                    }
-                }
             }
+            
+            $this->scope->write($char);
         }
         
         return $this->getObjects();
