@@ -14,10 +14,11 @@ class TextResponse extends BaseResponse
      * @param array $functionCalls
      * @param array $calledTools
      */
-    public function __construct(string $response, array $functionCalls, array $calledTools)
+    public function __construct(string $response, array $functionCalls, array $calledTools, \stdClass $tokensUsed)
     {
         $this->response = $response;
         $this->functionCalls = $functionCalls;
         $this->calledTools = $calledTools;
+        $this->tokensUsed = $tokensUsed;
     }
 }

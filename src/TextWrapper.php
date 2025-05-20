@@ -269,6 +269,11 @@ class TextWrapper
      */
     private function processResponse(array $response): void
     {
+        $response['tokensUsed'] = (object) [
+            'input' => ($response['tokensUsed']->input ?? 0) + ($this->lastResponse['tokensUsed']->input ?? 0),
+            'output' => ($response['tokensUsed']->output ?? 0) + ($this->lastResponse['tokensUsed']->output ?? 0),
+            'total' => ($response['tokensUsed']->total ?? 0) + ($this->lastResponse['tokensUsed']->total ?? 0)
+        ];
         $this->lastResponse = $response;
 
         switch ($response['type']) {
@@ -340,7 +345,8 @@ class TextWrapper
         return new TextResponse(
             $this->lastResponse['response'] ?? '',
             $this->lastResponse['tools'] ?? [],
-            $this->calledTools ?? []
+            $this->calledTools ?? [],
+            $this->lastResponse['tokensUsed'] ?? new \stdClass()
         );
     }
     /** 
@@ -357,7 +363,7 @@ class TextWrapper
         return new StructureResponse(
             json_decode($this->lastResponse['response'] ?? '{}'),
             $this->lastResponse['tools'] ?? [],
-            $this->calledTools ?? []
+            $this->calledTools ?? [],
         );
     }
 

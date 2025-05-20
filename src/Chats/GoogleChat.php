@@ -104,13 +104,23 @@ class GoogleChat extends BaseChat
         if (isset($response->candidates[0]['content']['parts'][0]['text'])) {
             return [
                 'type' => 'text',
-                'response' => $response->candidates[0]['content']['parts'][0]['text']
+                'response' => $response->candidates[0]['content']['parts'][0]['text'],
+                'tokensUsed' => (object) [
+                    'input' => $response->usageMetadata['promptTokenCount'] ?? 0,
+                    'output' => $response->usageMetadata['candidatesTokenCount'] ?? 0,
+                    'total' => $response->usageMetadata['totalTokenCount'] ?? 0
+                ]
             ];
         } else if ($response->candidates[0]['content']['parts'][0]['functionCall']) {
             return [
                 'type' => 'tool',
                 'rawResponse' => $response->candidates[0]['content']['parts'],
-                'tools' => $this->processToolForResponse($response->candidates[0]['content']['parts'])
+                'tools' => $this->processToolForResponse($response->candidates[0]['content']['parts']),
+                'tokensUsed' => (object) [
+                    'input' => $response->usageMetadata['promptTokenCount'] ?? 0,
+                    'output' => $response->usageMetadata['candidatesTokenCount'] ?? 0,
+                    'total' => $response->usageMetadata['totalTokenCount'] ?? 0
+                ]
             ];
         }
 

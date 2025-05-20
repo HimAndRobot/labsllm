@@ -17,4 +17,9 @@ abstract class BaseResponse implements ResponseInterface
      */
     public $calledTools = [];
 
+    /**
+     * @var \stdClass
+     */
+    public $tokensUsed;
+
 }
