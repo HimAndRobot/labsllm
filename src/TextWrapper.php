@@ -254,7 +254,7 @@ class TextWrapper
                 case 'tool':
                     $result = $this->executeTool($responseItem['tools'], $responseItem['rawResponse']);
                     yield new StreamResponse('', '', $result['calledTools'], $result['executedTools'], $messagesBag);
-                    if ($this->currentStep < $this->maxSteps) {
+                    if ($this->currentStep < $this->maxSteps && !$result['hasStopExecution']) {
                         yield from $this->executeChatStream($this->messagesBag);
                     }
                     break;
@@ -290,7 +290,7 @@ class TextWrapper
                 $result = $this->executeTool($response['tools'], $response['rawResponse']);
                 $this->calledTools = $result['calledTools'];
                 $this->executedTools = $result['executedTools'];
-                if ($this->currentStep < $this->maxSteps) {
+                if ($this->currentStep < $this->maxSteps && !$result['hasStopExecution']) {
                     $this->executeChat($this->messagesBag);
                 }
                 break;
@@ -310,8 +310,11 @@ class TextWrapper
         $this->messagesBag->add(Message::assistant(null, (array) $rawResponse)); 
         $calledTools = [];
         $executedTools = [];
+        $hasStopExecution = false;
 
         foreach ($tools as &$toolResponse) {
+            $calledTools[] = $toolResponse;
+            
             $filteredTools = array_filter($this->tools, function ($tool) use ($toolResponse) {
                 return $tool->getName() === $toolResponse['name'];
             });
@@ -319,6 +322,11 @@ class TextWrapper
 
             if (!$tool) {
                 throw new \Exception('Failed to execute tool: ' . $toolResponse['name'] . ' (tool not found)');
+            }
+
+            if ($tool->stopExecution()) {
+                $hasStopExecution = true;
+                break;
             }
 
             $response = $tool->execute($toolResponse['arguments'] ?? []);
@@ -333,7 +341,7 @@ class TextWrapper
                 )
             ); 
 
-            $calledTools[] = $toolResponse;
+            
             $toolResponse['response'] = $response;
             $this->lastResponse['tools'] = $tools;
             $executedTools[] = $toolResponse;
@@ -341,7 +349,8 @@ class TextWrapper
         return [
             'success' => true,
             'executedTools' => $executedTools,
-            'calledTools' => $calledTools
+            'calledTools' => $calledTools,
+            'hasStopExecution' => $hasStopExecution
         ];
     }
 

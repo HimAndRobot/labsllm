@@ -34,6 +34,11 @@ class FunctionHelper
      */
     protected \Closure $function;
 
+    /**
+     * @var bool
+     */
+    protected bool $stopExecution;
+
 
     /**
      * @param string $name
@@ -65,6 +70,15 @@ class FunctionHelper
     {
         $this->parameters = $parameters;
         $this->requiredParameters = $requiredParameters;
+        return $this;
+    }
+
+    /**
+     * @return FunctionHelper
+     */
+    public function stopExecution(): FunctionHelper
+    {
+        $this->stopExecution = true;
         return $this;
     }
 
