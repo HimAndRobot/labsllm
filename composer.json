@@ -1,6 +1,6 @@
 {
     "name": "labsllm/llm-wrapper",
-    "description": "Biblioteca PHP que integra diferentes serviços de LLM (ChatGPT, Claude, Gemini) em um wrapper único",
+    "description": "PHP library that integrates different LLM services (ChatGPT, Claude, Gemini) into a single wrapper",
     "type": "library",
     "license": "MIT",
     "autoload": {
