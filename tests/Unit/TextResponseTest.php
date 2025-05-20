@@ -16,10 +16,10 @@ class TextResponseTest extends TestCase
         
         $this->assertInstanceOf(TextResponse::class, $response);
         $this->assertEquals('Resposta de texto', $response->response);
-        $this->assertIsArray($response->functionCalls);
         $this->assertIsArray($response->calledTools);
-        $this->assertEmpty($response->functionCalls);
+        $this->assertIsArray($response->executedTools);
         $this->assertEmpty($response->calledTools);
+        $this->assertEmpty($response->executedTools);
     }
     
     /**
@@ -47,10 +47,10 @@ class TextResponseTest extends TestCase
         $response = new TextResponse('Aqui está a data', $functionCalls, $calledTools);
         
         $this->assertEquals('Aqui está a data', $response->response);
-        $this->assertEquals($functionCalls, $response->functionCalls);
-        $this->assertEquals($calledTools, $response->calledTools);
-        $this->assertCount(1, $response->functionCalls);
+        $this->assertEquals($functionCalls, $response->calledTools);
+        $this->assertEquals($calledTools, $response->executedTools);
         $this->assertCount(1, $response->calledTools);
+        $this->assertCount(1, $response->executedTools);
     }
     
     /**
@@ -78,8 +78,8 @@ class TextResponseTest extends TestCase
         $response = new TextResponse('Veja o horário atual', $functionCalls, $calledTools);
         
         $this->assertEquals('Veja o horário atual', $response->response);
-        $this->assertEquals('getDateOrTime', $response->functionCalls[0]['name']);
-        $this->assertEquals('time', $response->functionCalls[0]['arguments']['type']);
-        $this->assertEquals('Current time is 15:30:00', $response->calledTools[0]['response']['response']);
+        $this->assertEquals('getDateOrTime', $response->calledTools[0]['name']);
+        $this->assertEquals('time', $response->calledTools[0]['arguments']['type']);
+        $this->assertEquals('Current time is 15:30:00', $response->executedTools[0]['response']['response']);
     }
 } 

@@ -10,12 +10,12 @@ abstract class BaseResponse implements ResponseInterface
     /**
      * @var array
      */
-    public $functionCalls = [];
+    public $calledTools = [];
 
     /**
      * @var array
      */
-    public $calledTools = [];
+    public $executedTools = [];
 
     /**
      * @var \stdClass

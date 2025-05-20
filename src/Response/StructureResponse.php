@@ -11,16 +11,16 @@ class StructureResponse extends BaseResponse
 
     /**
      * @param \stdClass $response
-     * @param array $functionCalls
-     * @param array $calledTools
+     * @param array $calledTools    
+     * @param array $executedTools
      */
     public function __construct(
         \stdClass $response,
-        array $functionCalls,
-        array $calledTools
+        array $calledTools,
+        array $executedTools
     ) {
         $this->response = $response;
-        $this->functionCalls = $functionCalls;
         $this->calledTools = $calledTools;
+        $this->executedTools = $executedTools;
     }
 }

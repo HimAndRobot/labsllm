@@ -56,10 +56,16 @@ class TextWrapper
     protected array $lastResponse = [];
 
     /**
-     * Record of executed tools
+     * Record of called tools
      * @var array
      */
     protected array $calledTools = [];
+
+    /**
+     * Record of executed tools
+     * @var array
+     */
+    protected array $executedTools = [];
 
     /**
      * Maximum number of tool execution steps
@@ -183,7 +189,7 @@ class TextWrapper
         ]);
         
         $this->currentStep = 0;
-        $this->calledTools = [];
+        $this->executedTools = [];
         
         $this->executeChat($messagesBag);
 
@@ -247,7 +253,7 @@ class TextWrapper
                     break;
                 case 'tool':
                     $result = $this->executeTool($responseItem['tools'], $responseItem['rawResponse']);
-                    yield new StreamResponse('', '', $result['calledTools'], [], $messagesBag);
+                    yield new StreamResponse('', '', $result['calledTools'], $result['executedTools'], $messagesBag);
                     if ($this->currentStep < $this->maxSteps) {
                         yield from $this->executeChatStream($this->messagesBag);
                     }
@@ -283,6 +289,7 @@ class TextWrapper
             case 'tool':
                 $result = $this->executeTool($response['tools'], $response['rawResponse']);
                 $this->calledTools = $result['calledTools'];
+                $this->executedTools = $result['executedTools'];
                 if ($this->currentStep < $this->maxSteps) {
                     $this->executeChat($this->messagesBag);
                 }
@@ -302,6 +309,7 @@ class TextWrapper
     {
         $this->messagesBag->add(Message::assistant(null, (array) $rawResponse)); 
         $calledTools = [];
+        $executedTools = [];
 
         foreach ($tools as &$toolResponse) {
             $filteredTools = array_filter($this->tools, function ($tool) use ($toolResponse) {
@@ -325,12 +333,14 @@ class TextWrapper
                 )
             ); 
 
+            $calledTools[] = $toolResponse;
             $toolResponse['response'] = $response;
             $this->lastResponse['tools'] = $tools;
-            $calledTools[] = $toolResponse;
+            $executedTools[] = $toolResponse;
         }
         return [
             'success' => true,
+            'executedTools' => $executedTools,
             'calledTools' => $calledTools
         ];
     }
@@ -344,8 +354,8 @@ class TextWrapper
     {
         return new TextResponse(
             $this->lastResponse['response'] ?? '',
-            $this->lastResponse['tools'] ?? [],
             $this->calledTools ?? [],
+            $this->executedTools ?? [],
             $this->lastResponse['tokensUsed'] ?? new \stdClass()
         );
     }
@@ -363,7 +373,7 @@ class TextWrapper
         return new StructureResponse(
             json_decode($this->lastResponse['response'] ?? '{}'),
             $this->lastResponse['tools'] ?? [],
-            $this->calledTools ?? [],
+            $this->executedTools ?? [],
         );
     }
 
