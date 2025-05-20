@@ -37,7 +37,7 @@ class FunctionHelper
     /**
      * @var bool
      */
-    protected bool $stopExecution;
+    public bool $stopExecution = false;
 
 
     /**
@@ -124,9 +124,9 @@ class FunctionHelper
      * @param array<mixed> $arguments
      * @return array<string, mixed>
      */
-    public function execute(array $arguments): string
+    public function execute(array $toolResponse): string
     {
-        $response = ($this->function)(...$arguments);
+        $response = ($this->function)(...$toolResponse['arguments']);
         return is_string($response) ? $response : json_encode($response);
     }
 

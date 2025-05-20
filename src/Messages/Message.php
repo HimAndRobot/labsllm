@@ -117,6 +117,18 @@ class Message
         }
         return new self('tool', $content, null, $id, $name, $description, $arguments, $response);
     }
+
+    /**
+     * Creates a tool message with a call
+     *
+     * @param array $toolResponse
+     * @param string $reponse
+     * @param string $description
+     * @return \LabsLLM\Messages\Message
+     */
+    public static function toolWithCall(array $toolResponse, string $reponse, string $description = ''): self {
+        return new self('tool', $reponse, null, $toolResponse['id'], $toolResponse['name'], $description, $toolResponse['arguments'], $reponse);
+    }
     
     /**
      * Creates a function message

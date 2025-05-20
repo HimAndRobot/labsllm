@@ -324,12 +324,12 @@ class TextWrapper
                 throw new \Exception('Failed to execute tool: ' . $toolResponse['name'] . ' (tool not found)');
             }
 
-            if ($tool->stopExecution()) {
+            if ($tool->stopExecution) {
                 $hasStopExecution = true;
                 break;
             }
 
-            $response = $tool->execute($toolResponse['arguments'] ?? []);
+            $response = $tool->execute($toolResponse);
             $this->messagesBag->add(
                 Message::tool(
                     $response,
