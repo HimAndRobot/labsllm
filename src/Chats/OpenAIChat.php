@@ -28,6 +28,8 @@ class OpenAIChat extends BaseChat
 
         $stream = $client->chat()->createStreamed(parameters: $this->parseBodyFormPrompt($options));
         $toolsCalled = [];
+        
+        
        
         foreach ($stream as $response) {
             if (isset($response->choices[0]->delta->content)) {
@@ -51,6 +53,15 @@ class OpenAIChat extends BaseChat
                     $lastTool->function->arguments .= $response->choices[0]->delta->toolCalls[0]->function->arguments;
                     $toolsCalled[] = $lastTool;
                 }
+            } elseif (isset($response->usage)) {
+                yield [
+                    'type' => 'usage',
+                    'usage' => [
+                        'input' => $response->usage->promptTokens,
+                        'output' => $response->usage->completionTokens,
+                        'total' => $response->usage->totalTokens
+                    ]
+                ];
             }
         }
         
@@ -93,6 +104,10 @@ class OpenAIChat extends BaseChat
 
         return [
             'model' => $this->model,
+            'stream' => true,
+            'stream_options' => [
+                'include_usage' => true
+            ],
             'messages' => $messages,
             ...($options['tools'] ? ['tools' => $options['tools']] : []),
             ...(isset($options['output_schema']) ? ['response_format' => [

@@ -54,7 +54,7 @@ abstract class BaseResponse implements ResponseInterface
     {
         return array_filter($this->calledTools, function ($tool) use ($toolName) {
             return $tool['name'] === $toolName;
-        })[0];
+        })[0] ?? null;
     }
 
     /**
@@ -67,6 +67,6 @@ abstract class BaseResponse implements ResponseInterface
     {
         return array_filter($this->executedTools, function ($tool) use ($toolName) {
             return $tool['name'] === $toolName;
-        })[0];
+        })[0] ?? null;
     }
 }

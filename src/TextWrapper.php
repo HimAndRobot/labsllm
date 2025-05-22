@@ -86,6 +86,12 @@ class TextWrapper
     protected ObjectParameter $outputSchema;
 
     /**
+     * Tokens used
+     * @var array
+     */
+    protected array $tokensUsed = [];
+
+    /**
      * Sets the LLM provider to be used
      *
      * @param ProviderInterface $provider The provider (OpenAI, Anthropic, etc.)
@@ -258,13 +264,20 @@ class TextWrapper
                         yield from $this->executeChatStream($this->messagesBag);
                     }
                     break;
+                case 'usage':
+                    $this->tokensUsed = [
+                        'input' =>  ($this->tokensUsed['input'] ?? 0) + $responseItem['usage']['input'],
+                        'output' =>  ($this->tokensUsed['output'] ?? 0) + $responseItem['usage']['output'],
+                        'total' =>  ($this->tokensUsed['total'] ?? 0) + $responseItem['usage']['total']
+                    ];
+                    break;
             }
         }
 
         if ($acumulatedResponse) {
             $this->messagesBag->add(Message::assistant($acumulatedResponse));
         }
-        yield new StreamResponse('', $acumulatedResponse, [], [], $messagesBag);
+        yield new StreamResponse('', $acumulatedResponse, [], [], $messagesBag, $this->tokensUsed);
     }
 
     /**

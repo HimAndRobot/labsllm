@@ -22,6 +22,11 @@ class GoogleChat extends BaseChat
     {
         $stream = $this->executeGeminiRequestStream($this->parseBodyFormPrompt($options));
         $toolsCalled = [];
+        $tokensUsed = [
+            'input' => 0,
+            'output' => 0,
+            'total' => 0
+        ];
         foreach ($stream as $response) {
             if (isset($response['candidates'][0]['content']['parts'][0]['text'])) {
                 yield [
@@ -44,6 +49,14 @@ class GoogleChat extends BaseChat
                     }
                 }
             }
+            
+            if (isset($response['usageMetadata'])) {
+                $tokensUsed = [
+                    'input' => $response['usageMetadata']['promptTokenCount'] ?? 0,
+                    'output' => $response['usageMetadata']['candidatesTokenCount'] ?? 0,
+                    'total' => $response['usageMetadata']['totalTokenCount'] ?? 0
+                ];
+            }
         }
         
         if (count($toolsCalled) > 0) {
@@ -53,6 +66,11 @@ class GoogleChat extends BaseChat
                 'tools' => $this->processToolForResponse($toolsCalled)
             ];
         }
+
+        yield [
+            'type' => 'usage',
+            'usage' => $tokensUsed
+        ];
     }
 
     /**
