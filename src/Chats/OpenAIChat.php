@@ -18,7 +18,7 @@ class OpenAIChat extends BaseChat
     {
         $client = OpenAI::client($this->apiKey);
 
-        $result = $client->chat()->create(parameters: $this->parseBodyFormPrompt($options));
+        $result = $client->chat()->create(parameters: $this->parseBodyFormPrompt($options, false));
         return $this->processResponse($result);
     }
 
@@ -26,7 +26,7 @@ class OpenAIChat extends BaseChat
     {
         $client = OpenAI::client($this->apiKey);
 
-        $stream = $client->chat()->createStreamed(parameters: $this->parseBodyFormPrompt($options));
+        $stream = $client->chat()->createStreamed(parameters: $this->parseBodyFormPrompt($options, true));
         $toolsCalled = [];
         
         
@@ -80,14 +80,14 @@ class OpenAIChat extends BaseChat
      * @param array $options
      * @return array
      */
-    private function parseBodyFormPrompt(array $options): array
+    private function parseBodyFormPrompt(array $options, bool $isStream = false): array
     {
         $messages = $options['messages'] ?? [];
-        
+
         if (isset($options['systemMessage'])) {
             $messages = array_filter($messages, fn($msg) => $msg['role'] !== 'system');
             $systemMessage = ['role' => 'system', 'content' => $options['systemMessage']];
-            
+
             $lastUserIndex = -1;
             foreach (array_keys($messages) as $index) {
                 if ($messages[$index]['role'] === 'user') {
@@ -102,12 +102,8 @@ class OpenAIChat extends BaseChat
             }
         }
 
-        return [
+        $params = [
             'model' => $this->model,
-            'stream' => true,
-            'stream_options' => [
-                'include_usage' => true
-            ],
             'messages' => $messages,
             ...($options['tools'] ? ['tools' => $options['tools']] : []),
             ...(isset($options['output_schema']) ? ['response_format' => [
@@ -118,6 +114,15 @@ class OpenAIChat extends BaseChat
                 ]
             ]] : [])
         ];
+
+        if ($isStream) {
+            $params['stream'] = true;
+            $params['stream_options'] = [
+                'include_usage' => true
+            ];
+        }
+
+        return $params;
     }
 
     /**
