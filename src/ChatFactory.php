@@ -3,6 +3,7 @@
 namespace LabsLLM;
 
 use LabsLLM\Chats\OpenAIChat;
+use LabsLLM\Chats\OpenRouterChat;
 use LabsLLM\Config\ConfigInterface;
 use LabsLLM\Config\OpenAIConfig;
 use LabsLLM\Contracts\ChatInterface;
@@ -23,8 +24,9 @@ class ChatFactory
     public static function create(array $args): ChatInterface
     {
         return match ($args['provider']->name) {
-            'openai' => new OpenAIChat($args),
+            'openai' => new OpenAIChat($args['provider']),
+            'openrouter' => new OpenRouterChat($args['provider']),
             default => throw new ProviderNotFoundException("Provider '{$args['provider']}' not found or not implemented."),
         };
     }
-} 
+}

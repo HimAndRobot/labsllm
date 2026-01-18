@@ -4,6 +4,7 @@ namespace LabsLLM;
 
 use LabsLLM\Chats\GoogleChat;
 use LabsLLM\Chats\OpenAIChat;
+use LabsLLM\Chats\OpenRouterChat;
 use LabsLLM\Messages\Message;
 use LabsLLM\Messages\MessagesBag;
 use LabsLLM\Response\TextResponse;
@@ -107,6 +108,9 @@ class TextWrapper
                 break;
             case 'google':
                 $this->chatProvider = new GoogleChat($provider);
+                break;
+            case 'openrouter':
+                $this->chatProvider = new OpenRouterChat($provider);
                 break;
             default:
                 throw new \Exception('Unsupported provider: ' . $provider->getName());
